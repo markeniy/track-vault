@@ -47,7 +47,7 @@ function Header({
             <span className="header-chip-label">
               {'\u0410\u043a\u043a\u0430\u0443\u043d\u0442'}
             </span>
-            <strong>{userEmail}</strong>
+            <strong title={userEmail}>{userEmail}</strong>
           </div>
         </div>
       ) : null}
