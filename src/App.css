@@ -290,10 +290,16 @@
   background: rgba(255, 255, 255, 0.03);
   color: var(--text);
   outline: none;
+  color-scheme: dark;
 }
 
 .form-field input::placeholder {
   color: rgba(182, 170, 146, 0.7);
+}
+
+.form-field select option {
+  background: #161616;
+  color: var(--text);
 }
 
 .form-field input:focus,
