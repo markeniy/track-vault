@@ -1029,11 +1029,6 @@ function App() {
                 showTrackCount={activeLibrary !== 'community'}
               />
               <div className="topbar-actions">
-                {activeLibrary !== 'profile' ? (
-                  <button type="button" className="add-track-button" onClick={handleToggleForm}>
-                    {isFormOpen ? 'Закрыть форму' : 'Добавить трек'}
-                  </button>
-                ) : null}
                 <button type="button" className="secondary-button" onClick={handleSignOut}>
                   Выйти
                 </button>
@@ -1067,6 +1062,12 @@ function App() {
               />
             ) : (
               <>
+                <div className="content-action-row">
+                  <button type="button" className="add-track-button" onClick={handleToggleForm}>
+                    {isFormOpen ? 'Закрыть форму' : 'Добавить трек'}
+                  </button>
+                </div>
+
                 {isFormOpen ? (
                   <form className="track-form" onSubmit={handleSubmit}>
                     <div className="section-heading form-heading">
