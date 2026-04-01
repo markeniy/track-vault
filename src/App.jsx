@@ -1078,6 +1078,102 @@ function App() {
                     </button>
                   </div>
 
+                  {isFormOpen ? (
+                    <form className="track-form" onSubmit={handleSubmit}>
+                      <div className="section-heading form-heading">
+                        <p className="section-label">Редактор трека</p>
+                        <h2 className="section-title">
+                          {editingTrackId ? 'Редактировать трек' : 'Добавить новый трек'}
+                        </h2>
+                      </div>
+
+                      <div className="form-field">
+                        <label htmlFor="title">Название</label>
+                        <input
+                          id="title"
+                          name="title"
+                          type="text"
+                          value={formData.title}
+                          onChange={handleChange}
+                          placeholder="Введите название трека"
+                          required
+                        />
+                      </div>
+
+                      <div className="form-field">
+                        <label htmlFor="bpm">BPM</label>
+                        <input
+                          id="bpm"
+                          name="bpm"
+                          type="number"
+                          value={formData.bpm}
+                          onChange={handleChange}
+                          placeholder="Введите BPM"
+                          required
+                        />
+                      </div>
+
+                      <div className="form-field">
+                        <label htmlFor="status">Статус</label>
+                        <CustomSelect
+                          id="status"
+                          name="status"
+                          value={formData.status}
+                          onChange={handleChange}
+                          options={[
+                            { value: 'idea', label: 'Идея' },
+                            { value: 'draft', label: 'Черновик' },
+                            { value: 'mix', label: 'Микс' },
+                            { value: 'released', label: 'Релиз' },
+                          ]}
+                        />
+                      </div>
+
+                      <div className="form-field form-field-wide">
+                        <label htmlFor="comment">Заметки / Текст</label>
+                        <textarea
+                          id="comment"
+                          name="comment"
+                          value={formData.comment}
+                          onChange={handleChange}
+                          placeholder="Запиши идеи, текст куплета, референсы или любые рабочие заметки"
+                          rows="6"
+                        />
+                      </div>
+
+                      <div className="form-field form-field-wide">
+                        <label htmlFor="audio_url">Ссылка на аудио</label>
+                        <input
+                          id="audio_url"
+                          name="audio_url"
+                          type="url"
+                          value={formData.audio_url}
+                          onChange={handleChange}
+                          placeholder="Вставь прямую mp3-ссылку или публичную ссылку на источник"
+                        />
+                      </div>
+
+                      <div className="form-field">
+                        <label htmlFor="visibility">Доступ</label>
+                        <CustomSelect
+                          id="visibility"
+                          name="visibility"
+                          value={formData.visibility}
+                          onChange={handleChange}
+                          options={visibilityOptions}
+                        />
+                      </div>
+
+                      <button type="submit" className="save-track-button" disabled={isSaving}>
+                        {isSaving
+                          ? 'Сохраняем...'
+                          : editingTrackId
+                            ? 'Сохранить изменения'
+                            : 'Сохранить трек'}
+                      </button>
+                    </form>
+                  ) : null}
+
                   <div className="tools-grid tools-grid-single">
                     <div className="search-panel">
                       <div className="section-heading">
@@ -1121,102 +1217,6 @@ function App() {
                     onReset={handleResetTools}
                   />
                 </div>
-
-                {isFormOpen ? (
-                  <form className="track-form" onSubmit={handleSubmit}>
-                    <div className="section-heading form-heading">
-                      <p className="section-label">Редактор трека</p>
-                      <h2 className="section-title">
-                        {editingTrackId ? 'Редактировать трек' : 'Добавить новый трек'}
-                      </h2>
-                    </div>
-
-                    <div className="form-field">
-                      <label htmlFor="title">Название</label>
-                      <input
-                        id="title"
-                        name="title"
-                        type="text"
-                        value={formData.title}
-                        onChange={handleChange}
-                        placeholder="Введите название трека"
-                        required
-                      />
-                    </div>
-
-                    <div className="form-field">
-                      <label htmlFor="bpm">BPM</label>
-                      <input
-                        id="bpm"
-                        name="bpm"
-                        type="number"
-                        value={formData.bpm}
-                        onChange={handleChange}
-                        placeholder="Введите BPM"
-                        required
-                      />
-                    </div>
-
-                    <div className="form-field">
-                      <label htmlFor="status">Статус</label>
-                      <CustomSelect
-                        id="status"
-                        name="status"
-                        value={formData.status}
-                        onChange={handleChange}
-                        options={[
-                          { value: 'idea', label: 'Идея' },
-                          { value: 'draft', label: 'Черновик' },
-                          { value: 'mix', label: 'Микс' },
-                          { value: 'released', label: 'Релиз' },
-                        ]}
-                      />
-                    </div>
-
-                    <div className="form-field form-field-wide">
-                      <label htmlFor="comment">Заметки / Текст</label>
-                      <textarea
-                        id="comment"
-                        name="comment"
-                        value={formData.comment}
-                        onChange={handleChange}
-                        placeholder="Запиши идеи, текст куплета, референсы или любые рабочие заметки"
-                        rows="6"
-                      />
-                    </div>
-
-                    <div className="form-field form-field-wide">
-                      <label htmlFor="audio_url">Ссылка на аудио</label>
-                      <input
-                        id="audio_url"
-                        name="audio_url"
-                        type="url"
-                        value={formData.audio_url}
-                        onChange={handleChange}
-                        placeholder="Вставь прямую mp3-ссылку или публичную ссылку на источник"
-                      />
-                    </div>
-
-                    <div className="form-field">
-                      <label htmlFor="visibility">Доступ</label>
-                      <CustomSelect
-                        id="visibility"
-                        name="visibility"
-                        value={formData.visibility}
-                        onChange={handleChange}
-                        options={visibilityOptions}
-                      />
-                    </div>
-
-                    <button type="submit" className="save-track-button" disabled={isSaving}>
-                      {isSaving
-                        ? 'Сохраняем...'
-                        : editingTrackId
-                          ? 'Сохранить изменения'
-                          : 'Сохранить трек'}
-                    </button>
-                  </form>
-                ) : null}
 
                 <TrackList
                   tracks={visibleTracks}
