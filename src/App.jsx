@@ -3,6 +3,7 @@ import './App.css';
 import AuthForm from './components/AuthForm';
 import CustomSelect from './components/CustomSelect';
 import Header from './components/Header';
+import ProfilePanel from './components/ProfilePanel';
 import StatusFilter from './components/StatusFilter';
 import TrackList from './components/TrackList';
 import { supabase } from './lib/supabase';
@@ -15,10 +16,21 @@ const initialForm = {
   visibility: 'private',
 };
 
+function getDefaultDisplayName(email) {
+  return (email || '').split('@')[0] || 'artist';
+}
+
 function App() {
   const [session, setSession] = useState(null);
   const [isSessionLoading, setIsSessionLoading] = useState(true);
   const [tracks, setTracks] = useState([]);
+  const [profile, setProfile] = useState({
+    display_name: '',
+    avatar_url: '',
+  });
+  const [profileName, setProfileName] = useState('');
+  const [isProfileSaving, setIsProfileSaving] = useState(false);
+  const [isAvatarUploading, setIsAvatarUploading] = useState(false);
   const [activeLibrary, setActiveLibrary] = useState('mine');
   const [activeAudienceFilter, setActiveAudienceFilter] = useState('mine');
   const [activeFilter, setActiveFilter] = useState('all');
@@ -45,6 +57,72 @@ function App() {
     return errorText.includes('comment') && errorText.includes('column');
   }
 
+  async function loadProfileForUser(user) {
+    const defaultDisplayName = getDefaultDisplayName(user.email);
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, display_name, avatar_url')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Ошибка загрузки профиля:', error);
+      setProfile({
+        display_name: defaultDisplayName,
+        avatar_url: '',
+      });
+      setProfileName(defaultDisplayName);
+      return {
+        display_name: defaultDisplayName,
+        avatar_url: '',
+      };
+    }
+
+    if (data) {
+      const nextProfile = {
+        display_name: data.display_name || defaultDisplayName,
+        avatar_url: data.avatar_url || '',
+      };
+
+      setProfile(nextProfile);
+      setProfileName(nextProfile.display_name);
+      return nextProfile;
+    }
+
+    const { data: insertedProfile, error: insertError } = await supabase
+      .from('profiles')
+      .insert([
+        {
+          id: user.id,
+          display_name: defaultDisplayName,
+        },
+      ])
+      .select('id, display_name, avatar_url')
+      .single();
+
+    if (insertError) {
+      console.error('Ошибка создания профиля:', insertError);
+      setProfile({
+        display_name: defaultDisplayName,
+        avatar_url: '',
+      });
+      setProfileName(defaultDisplayName);
+      return {
+        display_name: defaultDisplayName,
+        avatar_url: '',
+      };
+    }
+
+    const nextProfile = {
+      display_name: insertedProfile.display_name || defaultDisplayName,
+      avatar_url: insertedProfile.avatar_url || '',
+    };
+
+    setProfile(nextProfile);
+    setProfileName(nextProfile.display_name);
+    return nextProfile;
+  }
+
   async function loadTracksForUser(userId) {
     const { data, error } = await supabase
       .from('tracks')
@@ -57,8 +135,42 @@ function App() {
       return [];
     }
 
-    setTracks(data || []);
-    return data || [];
+    const trackList = data || [];
+    const uniqueUserIds = [...new Set(trackList.map(function (track) {
+      return track.user_id;
+    }))];
+
+    let profilesById = {};
+
+    if (uniqueUserIds.length > 0) {
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, display_name')
+        .in('id', uniqueUserIds);
+
+      if (profilesError) {
+        console.error('Ошибка загрузки имён артистов:', profilesError);
+      } else {
+        profilesById = (profilesData || []).reduce(function (result, item) {
+          result[item.id] = item;
+          return result;
+        }, {});
+      }
+    }
+
+    const mappedTracks = trackList.map(function (track) {
+      const artistProfile = profilesById[track.user_id];
+
+      return {
+        ...track,
+        artist_name:
+          artistProfile?.display_name ||
+          (track.user_id === userId ? profile.display_name || getDefaultDisplayName(session?.user?.email) : 'Артист'),
+      };
+    });
+
+    setTracks(mappedTracks);
+    return mappedTracks;
   }
 
   useEffect(function () {
@@ -90,16 +202,22 @@ function App() {
   }, []);
 
   useEffect(function () {
-    async function loadTracks() {
+    async function loadWorkspace() {
       if (!session?.user) {
         setTracks([]);
+        setProfile({
+          display_name: '',
+          avatar_url: '',
+        });
+        setProfileName('');
         return;
       }
 
+      await loadProfileForUser(session.user);
       await loadTracksForUser(session.user.id);
     }
 
-    loadTracks();
+    loadWorkspace();
   }, [session]);
 
   function handleToggleForm() {
@@ -138,6 +256,17 @@ function App() {
     });
   }
 
+  function handleProfileNameChange(event) {
+    setProfileName(event.target.value);
+
+    if (feedback.text) {
+      setFeedback({
+        type: '',
+        text: '',
+      });
+    }
+  }
+
   const visibilityOptions = [
     { value: 'private', label: 'Приватный' },
     { value: 'public', label: 'Публичный' },
@@ -172,6 +301,145 @@ function App() {
 
     setActiveAudienceFilter(nextValue);
     setActiveLibrary(nextValue === 'public' ? 'community' : 'mine');
+  }
+
+  async function handleProfileSubmit(event) {
+    event.preventDefault();
+    setFeedback({
+      type: '',
+      text: '',
+    });
+
+    if (!session?.user) {
+      return;
+    }
+
+    setIsProfileSaving(true);
+
+    const trimmedName = profileName.trim() || getDefaultDisplayName(session.user.email);
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .upsert([
+        {
+          id: session.user.id,
+          display_name: trimmedName,
+          avatar_url: profile.avatar_url || null,
+        },
+      ])
+      .select('id, display_name, avatar_url')
+      .single();
+
+    if (error) {
+      console.error('Ошибка сохранения профиля:', error);
+      setFeedback({
+        type: 'error',
+        text: 'Не удалось сохранить имя артиста. Попробуй ещё раз.',
+      });
+      setIsProfileSaving(false);
+      return;
+    }
+
+    const nextProfile = {
+      display_name: data.display_name || trimmedName,
+      avatar_url: data.avatar_url || '',
+    };
+
+    setProfile(nextProfile);
+    setProfileName(nextProfile.display_name);
+    setTracks(function (currentTracks) {
+      return currentTracks.map(function (track) {
+        if (track.user_id !== session.user.id) {
+          return track;
+        }
+
+        return {
+          ...track,
+          artist_name: nextProfile.display_name,
+        };
+      });
+    });
+
+    setFeedback({
+      type: 'info',
+      text: 'Профиль обновлён. Теперь другие артисты увидят твоё имя именно так.',
+    });
+    setIsProfileSaving(false);
+  }
+
+  async function handleAvatarUpload(event) {
+    const file = event.target.files && event.target.files[0];
+
+    if (!file || !session?.user) {
+      return;
+    }
+
+    setFeedback({
+      type: '',
+      text: '',
+    });
+    setIsAvatarUploading(true);
+
+    const fileExt = (file.name.split('.').pop() || 'png').toLowerCase();
+    const safeExt = ['jpg', 'jpeg', 'png', 'webp'].includes(fileExt) ? fileExt : 'png';
+    const filePath = session.user.id + '/avatar.' + safeExt;
+
+    const { error: uploadError } = await supabase.storage
+      .from('avatars')
+      .upload(filePath, file, {
+        upsert: true,
+      });
+
+    if (uploadError) {
+      console.error('Ошибка загрузки аватарки:', uploadError);
+      setFeedback({
+        type: 'error',
+        text: 'Не удалось загрузить аватарку. Проверь формат файла и попробуй ещё раз.',
+      });
+      setIsAvatarUploading(false);
+      return;
+    }
+
+    const { data: publicUrlData } = supabase.storage
+      .from('avatars')
+      .getPublicUrl(filePath);
+
+    const nextAvatarUrl = publicUrlData?.publicUrl || '';
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .upsert([
+        {
+          id: session.user.id,
+          display_name: profileName.trim() || getDefaultDisplayName(session.user.email),
+          avatar_url: nextAvatarUrl,
+        },
+      ])
+      .select('id, display_name, avatar_url')
+      .single();
+
+    if (error) {
+      console.error('Ошибка сохранения аватарки:', error);
+      setFeedback({
+        type: 'error',
+        text: 'Аватарка загрузилась, но ссылка не сохранилась в профиле. Попробуй ещё раз.',
+      });
+      setIsAvatarUploading(false);
+      return;
+    }
+
+    const nextProfile = {
+      display_name: data.display_name || profile.display_name,
+      avatar_url: data.avatar_url || nextAvatarUrl,
+    };
+
+    setProfile(nextProfile);
+    setFeedback({
+      type: 'info',
+      text: 'Аватарка обновлена.',
+    });
+    setIsAvatarUploading(false);
+    event.target.value = '';
   }
 
   async function handleSubmit(event) {
@@ -245,11 +513,16 @@ function App() {
       if (!data) {
         await loadTracksForUser(session.user.id);
       } else {
-        setTracks((prev) =>
-          prev.map((track) =>
-            track.id === editingTrackId ? data : track
-          )
-        );
+        setTracks(function (currentTracks) {
+          return currentTracks.map(function (track) {
+            return track.id === editingTrackId
+              ? {
+                  ...data,
+                  artist_name: profile.display_name || getDefaultDisplayName(session.user.email),
+                }
+              : track;
+          });
+        });
       }
     } else {
       const newTrack = {
@@ -308,7 +581,13 @@ function App() {
         await loadTracksForUser(session.user.id);
       } else {
         setTracks(function (currentTracks) {
-          return [data, ...currentTracks];
+          return [
+            {
+              ...data,
+              artist_name: profile.display_name || getDefaultDisplayName(session.user.email),
+            },
+            ...currentTracks,
+          ];
         });
       }
     }
@@ -378,8 +657,13 @@ function App() {
 
     const title = (track.title || '').toLowerCase();
     const comment = (track.comment || '').toLowerCase();
+    const artistName = (track.artist_name || '').toLowerCase();
 
-    return title.includes(searchValue) || comment.includes(searchValue);
+    return (
+      title.includes(searchValue) ||
+      comment.includes(searchValue) ||
+      artistName.includes(searchValue)
+    );
   });
 
   const visibleTracks = [...searchedTracks].sort(function (firstTrack, secondTrack) {
@@ -451,15 +735,33 @@ function App() {
             >
               Заметки других артистов
             </button>
+            <button
+              type="button"
+              className={
+                activeLibrary === 'profile' ? 'library-button active' : 'library-button'
+              }
+              onClick={function () {
+                setActiveLibrary('profile');
+              }}
+            >
+              Личный кабинет
+            </button>
           </aside>
 
           <div className="workspace-main">
             <div className="app-topbar">
-              <Header trackCount={libraryTracks.length} userEmail={session.user.email} />
+              <Header
+                trackCount={libraryTracks.length}
+                userEmail={session.user.email}
+                displayName={profile.display_name || getDefaultDisplayName(session.user.email)}
+                avatarUrl={profile.avatar_url}
+              />
               <div className="topbar-actions">
-                <button type="button" className="add-track-button" onClick={handleToggleForm}>
-                  {isFormOpen ? 'Закрыть форму' : 'Добавить трек'}
-                </button>
+                {activeLibrary !== 'profile' ? (
+                  <button type="button" className="add-track-button" onClick={handleToggleForm}>
+                    {isFormOpen ? 'Закрыть форму' : 'Добавить трек'}
+                  </button>
+                ) : null}
                 <button type="button" className="secondary-button" onClick={handleSignOut}>
                   Выйти
                 </button>
@@ -478,136 +780,154 @@ function App() {
               </div>
             ) : null}
 
-            {isFormOpen ? (
-              <form className="track-form" onSubmit={handleSubmit}>
-                <div className="section-heading form-heading">
-                  <p className="section-label">Редактор трека</p>
-                  <h2 className="section-title">
-                    {editingTrackId ? 'Редактировать трек' : 'Добавить новый трек'}
-                  </h2>
-                </div>
+            {activeLibrary === 'profile' ? (
+              <ProfilePanel
+                displayName={profileName}
+                email={session.user.email}
+                avatarUrl={profile.avatar_url}
+                onChange={handleProfileNameChange}
+                onSubmit={handleProfileSubmit}
+                onAvatarUpload={handleAvatarUpload}
+                isSaving={isProfileSaving}
+                isAvatarUploading={isAvatarUploading}
+              />
+            ) : (
+              <>
+                {isFormOpen ? (
+                  <form className="track-form" onSubmit={handleSubmit}>
+                    <div className="section-heading form-heading">
+                      <p className="section-label">Редактор трека</p>
+                      <h2 className="section-title">
+                        {editingTrackId ? 'Редактировать трек' : 'Добавить новый трек'}
+                      </h2>
+                    </div>
 
-                <div className="form-field">
-                  <label htmlFor="title">Название</label>
-                  <input
-                    id="title"
-                    name="title"
-                    type="text"
-                    value={formData.title}
-                    onChange={handleChange}
-                    placeholder="Введите название трека"
-                    required
-                  />
-                </div>
+                    <div className="form-field">
+                      <label htmlFor="title">Название</label>
+                      <input
+                        id="title"
+                        name="title"
+                        type="text"
+                        value={formData.title}
+                        onChange={handleChange}
+                        placeholder="Введите название трека"
+                        required
+                      />
+                    </div>
 
-                <div className="form-field">
-                  <label htmlFor="bpm">BPM</label>
-                  <input
-                    id="bpm"
-                    name="bpm"
-                    type="number"
-                    value={formData.bpm}
-                    onChange={handleChange}
-                    placeholder="Введите BPM"
-                    required
-                  />
-                </div>
+                    <div className="form-field">
+                      <label htmlFor="bpm">BPM</label>
+                      <input
+                        id="bpm"
+                        name="bpm"
+                        type="number"
+                        value={formData.bpm}
+                        onChange={handleChange}
+                        placeholder="Введите BPM"
+                        required
+                      />
+                    </div>
 
-                <div className="form-field">
-                  <label htmlFor="status">Статус</label>
-                  <CustomSelect
-                    id="status"
-                    name="status"
-                    value={formData.status}
-                    onChange={handleChange}
-                    options={[
-                      { value: 'idea', label: 'Идея' },
-                      { value: 'draft', label: 'Черновик' },
-                      { value: 'mix', label: 'Микс' },
-                      { value: 'released', label: 'Релиз' },
-                    ]}
-                  />
-                </div>
+                    <div className="form-field">
+                      <label htmlFor="status">Статус</label>
+                      <CustomSelect
+                        id="status"
+                        name="status"
+                        value={formData.status}
+                        onChange={handleChange}
+                        options={[
+                          { value: 'idea', label: 'Идея' },
+                          { value: 'draft', label: 'Черновик' },
+                          { value: 'mix', label: 'Микс' },
+                          { value: 'released', label: 'Релиз' },
+                        ]}
+                      />
+                    </div>
 
-                <div className="form-field form-field-wide">
-                  <label htmlFor="comment">Заметки / Текст</label>
-                  <textarea
-                    id="comment"
-                    name="comment"
-                    value={formData.comment}
-                    onChange={handleChange}
-                    placeholder="Запиши идеи, текст куплета, референсы или любые рабочие заметки"
-                    rows="6"
-                  />
-                </div>
+                    <div className="form-field form-field-wide">
+                      <label htmlFor="comment">Заметки / Текст</label>
+                      <textarea
+                        id="comment"
+                        name="comment"
+                        value={formData.comment}
+                        onChange={handleChange}
+                        placeholder="Запиши идеи, текст куплета, референсы или любые рабочие заметки"
+                        rows="6"
+                      />
+                    </div>
 
-                <div className="form-field">
-                  <label htmlFor="visibility">Доступ</label>
-                  <CustomSelect
-                    id="visibility"
-                    name="visibility"
-                    value={formData.visibility}
-                    onChange={handleChange}
-                    options={visibilityOptions}
-                  />
-                </div>
+                    <div className="form-field">
+                      <label htmlFor="visibility">Доступ</label>
+                      <CustomSelect
+                        id="visibility"
+                        name="visibility"
+                        value={formData.visibility}
+                        onChange={handleChange}
+                        options={visibilityOptions}
+                      />
+                    </div>
 
-                <button type="submit" className="save-track-button" disabled={isSaving}>
-                  {isSaving
-                    ? 'Сохраняем...'
-                    : editingTrackId
-                      ? 'Сохранить изменения'
-                      : 'Сохранить трек'}
-                </button>
-              </form>
-            ) : null}
+                    <button type="submit" className="save-track-button" disabled={isSaving}>
+                      {isSaving
+                        ? 'Сохраняем...'
+                        : editingTrackId
+                          ? 'Сохранить изменения'
+                          : 'Сохранить трек'}
+                    </button>
+                  </form>
+                ) : null}
 
-            <div className="tools-grid tools-grid-single">
-              <div className="search-panel">
-                <div className="section-heading">
-                  <p className="section-label">Поиск</p>
-                  <h2 className="section-title">Название и заметки</h2>
-                </div>
+                <div className="tools-grid tools-grid-single">
+                  <div className="search-panel">
+                    <div className="section-heading">
+                      <p className="section-label">Поиск</p>
+                      <h2 className="section-title">
+                        {activeLibrary === 'community'
+                          ? 'Название, заметки и имя артиста'
+                          : 'Название и заметки'}
+                      </h2>
+                    </div>
 
                 <div className="search-input-wrap">
-                  <span className="search-icon" aria-hidden="true">Поиск</span>
+                  {!searchQuery ? (
+                    <span className="search-icon" aria-hidden="true">Поиск</span>
+                  ) : null}
                   <input
                     type="text"
                     value={searchQuery}
-                    onChange={function (event) {
-                      setSearchQuery(event.target.value);
-                    }}
-                    placeholder=""
-                  />
+                        onChange={function (event) {
+                          setSearchQuery(event.target.value);
+                        }}
+                        placeholder=""
+                      />
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
 
-            <div className="tools-actions">
-              <button type="button" className="secondary-button" onClick={handleResetTools}>
-                Сбросить фильтры
-              </button>
-            </div>
 
-            <StatusFilter
-              activeFilter={activeFilter}
-              onFilterChange={function (event) {
-                setActiveFilter(event.target.value);
-              }}
-              sortBy={sortBy}
-              onSortChange={function (event) {
-                setSortBy(event.target.value);
-              }}
-              activeAudienceFilter={activeAudienceFilter}
-              onAudienceChange={handleAudienceFilterChange}
-            />
-            <TrackList
-              tracks={visibleTracks}
-              onDelete={handleDelete}
-              onEdit={handleEdit}
-              searchQuery={searchQuery}
-              currentUserId={session.user.id}
-            />
+                <StatusFilter
+                  activeFilter={activeFilter}
+                  onFilterChange={function (event) {
+                    setActiveFilter(event.target.value);
+                  }}
+                  sortBy={sortBy}
+                  onSortChange={function (event) {
+                    setSortBy(event.target.value);
+                  }}
+                  activeAudienceFilter={activeAudienceFilter}
+                  onAudienceChange={handleAudienceFilterChange}
+                  onReset={handleResetTools}
+                />
+
+                <TrackList
+                  tracks={visibleTracks}
+                  onDelete={handleDelete}
+                  onEdit={handleEdit}
+                  searchQuery={searchQuery}
+                  currentUserId={session.user.id}
+                />
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -616,5 +936,4 @@ function App() {
 }
 
 export default App;
-
 

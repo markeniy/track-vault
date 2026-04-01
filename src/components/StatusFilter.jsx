@@ -7,6 +7,7 @@ function StatusFilter({
   onSortChange,
   activeAudienceFilter,
   onAudienceChange,
+  onReset,
 }) {
   const statusOptions = [
     { value: 'all', label: '\u0412\u0441\u0435 \u0441\u0442\u0430\u0442\u0443\u0441\u044b' },
@@ -55,9 +56,14 @@ function StatusFilter({
         <p className="section-label">
           {'\u0411\u0438\u0431\u043b\u0438\u043e\u0442\u0435\u043a\u0430 \u0444\u0438\u043b\u044c\u0442\u0440\u043e\u0432'}
         </p>
-        <h2 className="section-title">
-          {'\u0424\u0438\u043b\u044c\u0442\u0440\u044b \u0438 \u043f\u043e\u0440\u044f\u0434\u043e\u043a \u0432\u044b\u0434\u0430\u0447\u0438'}
-        </h2>
+        <div className="filter-header-row">
+          <h2 className="section-title">
+            {'\u0424\u0438\u043b\u044c\u0442\u0440\u044b \u0438 \u043f\u043e\u0440\u044f\u0434\u043e\u043a \u0432\u044b\u0434\u0430\u0447\u0438'}
+          </h2>
+          <button type="button" className="secondary-button filter-reset-button" onClick={onReset}>
+            {'\u0421\u0431\u0440\u043e\u0441\u0438\u0442\u044c \u0444\u0438\u043b\u044c\u0442\u0440\u044b'}
+          </button>
+        </div>
       </div>
 
       <div className="filter-select-grid">

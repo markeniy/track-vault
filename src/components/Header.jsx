@@ -1,4 +1,6 @@
-function Header({ trackCount, userEmail }) {
+function Header({ trackCount, userEmail, displayName, avatarUrl }) {
+  const avatarLetter = (displayName || userEmail || 'A').charAt(0).toUpperCase();
+
   return (
     <div className="header-block">
       <p className="auth-eyebrow">
@@ -13,11 +15,28 @@ function Header({ trackCount, userEmail }) {
         }
       </p>
       <div className="header-meta">
+        <div className="header-avatar-chip">
+          {avatarUrl ? (
+            <img
+              src={avatarUrl}
+              alt={'\u0410\u0432\u0430\u0442\u0430\u0440 \u0430\u0440\u0442\u0438\u0441\u0442\u0430'}
+              className="header-avatar-image"
+            />
+          ) : (
+            <div className="header-avatar-placeholder">{avatarLetter}</div>
+          )}
+        </div>
         <div className="header-chip">
           <span className="header-chip-label">
             {'\u0422\u0440\u0435\u043a\u0438'}
           </span>
           <strong>{trackCount}</strong>
+        </div>
+        <div className="header-chip">
+          <span className="header-chip-label">
+            {'\u0418\u043c\u044f'}
+          </span>
+          <strong>{displayName}</strong>
         </div>
         <div className="header-chip">
           <span className="header-chip-label">

@@ -55,7 +55,7 @@ function TrackList({ tracks, onDelete, onEdit, searchQuery, currentUserId }) {
   if (tracks.length === 0) {
     return (
       <section className="track-list">
-        <EmptyState />
+        <EmptyState isSearchResult={Boolean(searchQuery.trim())} />
       </section>
     );
   }
