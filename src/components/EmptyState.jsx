@@ -2,10 +2,10 @@ function EmptyState() {
   return (
     <div className="empty-state">
       <div className="empty-state-orb" />
-      <p className="empty-state-title">No tracks in your vault yet</p>
+      <p className="empty-state-title">¬ твоЄм хранилище пока нет треков</p>
       <p className="empty-state-text">
-        Add your first record to start building a private catalog of ideas, drafts,
-        mixes and finished releases.
+        ƒобавь первый трек, чтобы собрать приватный каталог идей, черновиков,
+        миксов и готовых релизов.
       </p>
     </div>
   );

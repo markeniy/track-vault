@@ -10,6 +10,7 @@ const initialForm = {
   title: '',
   bpm: '',
   status: 'idea',
+  comment: '',
 };
 
 function App() {
@@ -17,16 +18,34 @@ function App() {
   const [isSessionLoading, setIsSessionLoading] = useState(true);
   const [tracks, setTracks] = useState([]);
   const [activeFilter, setActiveFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState('newest');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [formData, setFormData] = useState(initialForm);
   const [editingTrackId, setEditingTrackId] = useState(null);
+
+  async function loadTracksForUser(userId) {
+    const { data, error } = await supabase
+      .from('tracks')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Ошибка загрузки треков:', error);
+      return [];
+    }
+
+    setTracks(data || []);
+    return data || [];
+  }
 
   useEffect(function () {
     async function loadSession() {
       const { data, error } = await supabase.auth.getSession();
 
       if (error) {
-        console.error('Error loading session:', error);
+        console.error('Ошибка загрузки сессии:', error);
         setIsSessionLoading(false);
         return;
       }
@@ -56,18 +75,7 @@ function App() {
         return;
       }
 
-      const { data, error } = await supabase
-        .from('tracks')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error loading tracks:', error);
-        return;
-      }
-
-      setTracks(data || []);
+      await loadTracksForUser(session.user.id);
     }
 
     loadTracks();
@@ -103,8 +111,15 @@ function App() {
       title: track.title,
       bpm: String(track.bpm),
       status: track.status,
+      comment: track.comment || '',
     });
     setIsFormOpen(true);
+  }
+
+  function handleResetTools() {
+    setActiveFilter('all');
+    setSearchQuery('');
+    setSortBy('newest');
   }
 
   async function handleSubmit(event) {
@@ -121,6 +136,7 @@ function App() {
           title: formData.title,
           bpm: Number(formData.bpm),
           status: formData.status,
+          comment: formData.comment,
         })
         .eq('id', editingTrackId)
         .eq('user_id', session.user.id)
@@ -128,20 +144,25 @@ function App() {
         .single();
 
       if (error) {
-        console.error('Error updating track:', error);
+        console.error('Ошибка обновления трека:', error);
         return;
       }
 
-      setTracks((prev) =>
-        prev.map((track) =>
-          track.id === editingTrackId ? data : track
-        )
-      );
+      if (!data) {
+        await loadTracksForUser(session.user.id);
+      } else {
+        setTracks((prev) =>
+          prev.map((track) =>
+            track.id === editingTrackId ? data : track
+          )
+        );
+      }
     } else {
       const newTrack = {
         title: formData.title,
         bpm: Number(formData.bpm),
         status: formData.status,
+        comment: formData.comment,
         user_id: session.user.id,
       };
 
@@ -152,13 +173,17 @@ function App() {
         .single();
 
       if (error) {
-        console.error('Error adding track:', error);
+        console.error('Ошибка добавления трека:', error);
         return;
       }
 
-      setTracks(function (currentTracks) {
-        return [data, ...currentTracks];
-      });
+      if (!data) {
+        await loadTracksForUser(session.user.id);
+      } else {
+        setTracks(function (currentTracks) {
+          return [data, ...currentTracks];
+        });
+      }
     }
 
     setFormData(initialForm);
@@ -178,7 +203,7 @@ function App() {
       .eq('user_id', session.user.id);
 
     if (error) {
-      console.error('Error deleting track:', error);
+      console.error('Ошибка удаления трека:', error);
       return;
     }
 
@@ -193,7 +218,7 @@ function App() {
     const { error } = await supabase.auth.signOut();
 
     if (error) {
-      console.error('Error signing out:', error);
+      console.error('Ошибка выхода из аккаунта:', error);
     }
   }
 
@@ -204,12 +229,49 @@ function App() {
           return track.status === activeFilter;
         });
 
+  const searchedTracks = filteredTracks.filter(function (track) {
+    const searchValue = searchQuery.trim().toLowerCase();
+
+    if (!searchValue) {
+      return true;
+    }
+
+    const title = (track.title || '').toLowerCase();
+    const comment = (track.comment || '').toLowerCase();
+
+    return title.includes(searchValue) || comment.includes(searchValue);
+  });
+
+  const visibleTracks = [...searchedTracks].sort(function (firstTrack, secondTrack) {
+    if (sortBy === 'bpm-asc') {
+      return Number(firstTrack.bpm || 0) - Number(secondTrack.bpm || 0);
+    }
+
+    if (sortBy === 'bpm-desc') {
+      return Number(secondTrack.bpm || 0) - Number(firstTrack.bpm || 0);
+    }
+
+    if (sortBy === 'title-asc') {
+      return (firstTrack.title || '').localeCompare(secondTrack.title || '', 'ru');
+    }
+
+    if (sortBy === 'title-desc') {
+      return (secondTrack.title || '').localeCompare(firstTrack.title || '', 'ru');
+    }
+
+    if (sortBy === 'oldest') {
+      return new Date(firstTrack.created_at || 0) - new Date(secondTrack.created_at || 0);
+    }
+
+    return new Date(secondTrack.created_at || 0) - new Date(firstTrack.created_at || 0);
+  });
+
   if (isSessionLoading) {
     return (
       <main className="auth-shell">
         <div className="auth-card">
-          <h1 className="app-title">Track Vault</h1>
-          <p className="auth-text">Loading...</p>
+          <h1 className="app-title">Трек Хранилище</h1>
+          <p className="auth-text">Загрузка...</p>
         </div>
       </main>
     );
@@ -220,80 +282,147 @@ function App() {
   }
 
   return (
-      <main className="app-shell">
-        <div className="app-card">
-          <div className="app-topbar">
-            <Header trackCount={tracks.length} userEmail={session.user.email} />
-            <div className="topbar-actions">
-              <button type="button" className="add-track-button" onClick={handleToggleForm}>
-                {isFormOpen ? 'Close Form' : 'Add Track'}
-              </button>
-              <button type="button" className="secondary-button" onClick={handleSignOut}>
-                Sign Out
-              </button>
+    <main className="app-shell">
+      <div className="app-card">
+        <div className="app-topbar">
+          <Header trackCount={tracks.length} userEmail={session.user.email} />
+          <div className="topbar-actions">
+            <button type="button" className="add-track-button" onClick={handleToggleForm}>
+              {isFormOpen ? 'Закрыть форму' : 'Добавить трек'}
+            </button>
+            <button type="button" className="secondary-button" onClick={handleSignOut}>
+              Выйти
+            </button>
+          </div>
+        </div>
+
+        {isFormOpen ? (
+          <form className="track-form" onSubmit={handleSubmit}>
+            <div className="section-heading form-heading">
+              <p className="section-label">Редактор трека</p>
+              <h2 className="section-title">
+                {editingTrackId ? 'Редактировать трек' : 'Добавить новый трек'}
+              </h2>
+            </div>
+
+            <div className="form-field">
+              <label htmlFor="title">Название</label>
+              <input
+                id="title"
+                name="title"
+                type="text"
+                value={formData.title}
+                onChange={handleChange}
+                placeholder="Введите название трека"
+                required
+              />
+            </div>
+
+            <div className="form-field">
+              <label htmlFor="bpm">BPM</label>
+              <input
+                id="bpm"
+                name="bpm"
+                type="number"
+                value={formData.bpm}
+                onChange={handleChange}
+                placeholder="Введите BPM"
+                required
+              />
+            </div>
+
+            <div className="form-field">
+              <label htmlFor="status">Статус</label>
+              <select
+                id="status"
+                name="status"
+                value={formData.status}
+                onChange={handleChange}
+              >
+                <option value="idea">Идея</option>
+                <option value="draft">Черновик</option>
+                <option value="mix">Микс</option>
+                <option value="released">Релиз</option>
+              </select>
+            </div>
+
+            <div className="form-field form-field-wide">
+              <label htmlFor="comment">Заметки / Текст</label>
+              <textarea
+                id="comment"
+                name="comment"
+                value={formData.comment}
+                onChange={handleChange}
+                placeholder="Запиши идеи, текст куплета, референсы или любые рабочие заметки"
+                rows="6"
+              />
+            </div>
+
+            <button type="submit" className="save-track-button">
+              {editingTrackId ? 'Сохранить изменения' : 'Сохранить трек'}
+            </button>
+          </form>
+        ) : null}
+
+        <div className="tools-grid">
+          <div className="search-panel">
+            <div className="section-heading">
+              <p className="section-label">Поиск</p>
+              <h2 className="section-title">Название и заметки</h2>
+            </div>
+
+            <div className="search-input-wrap">
+              <span className="search-icon" aria-hidden="true">Поиск</span>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={function (event) {
+                  setSearchQuery(event.target.value);
+                }}
+                placeholder="Ищи по названию трека, тексту песни или заметкам"
+              />
             </div>
           </div>
 
-          {isFormOpen ? (
-            <form className="track-form" onSubmit={handleSubmit}>
-              <div className="section-heading form-heading">
-                <p className="section-label">Track Editor</p>
-                <h2 className="section-title">
-                  {editingTrackId ? 'Refine Track Details' : 'Add New Track'}
-                </h2>
-              </div>
+          <div className="sort-panel">
+            <div className="section-heading">
+              <p className="section-label">Сортировка</p>
+              <h2 className="section-title">Порядок списка</h2>
+            </div>
 
-              <div className="form-field">
-                <label htmlFor="title">Title</label>
-                <input
-                  id="title"
-                  name="title"
-                  type="text"
-                  value={formData.title}
-                  onChange={handleChange}
-                  placeholder="Enter track title"
-                  required
-                />
-              </div>
-
-              <div className="form-field">
-                <label htmlFor="bpm">BPM</label>
-                <input
-                  id="bpm"
-                  name="bpm"
-                  type="number"
-                  value={formData.bpm}
-                  onChange={handleChange}
-                  placeholder="Enter BPM"
-                  required
-                />
-              </div>
-
-              <div className="form-field">
-                <label htmlFor="status">Status</label>
-                <select
-                  id="status"
-                  name="status"
-                  value={formData.status}
-                  onChange={handleChange}
-                >
-                  <option value="idea">Idea</option>
-                  <option value="draft">Draft</option>
-                  <option value="mix">Mix</option>
-                  <option value="released">Released</option>
-                </select>
-              </div>
-
-              <button type="submit" className="save-track-button">
-                {editingTrackId ? 'Update Track' : 'Save Track'}
-              </button>
-            </form>
-          ) : null}
-
-          <StatusFilter activeFilter={activeFilter} onFilterChange={setActiveFilter} />
-          <TrackList tracks={filteredTracks} onDelete={handleDelete} onEdit={handleEdit} />
+            <div className="form-field">
+              <select
+                value={sortBy}
+                onChange={function (event) {
+                  setSortBy(event.target.value);
+                }}
+              >
+                <option value="newest">Сначала новые</option>
+                <option value="oldest">Сначала старые</option>
+                <option value="bpm-asc">BPM: по возрастанию</option>
+                <option value="bpm-desc">BPM: по убыванию</option>
+                <option value="title-asc">Название: А-Я</option>
+                <option value="title-desc">Название: Я-А</option>
+              </select>
+            </div>
+          </div>
         </div>
-      </main>
+
+        <div className="tools-actions">
+          <button type="button" className="secondary-button" onClick={handleResetTools}>
+            Сбросить фильтры
+          </button>
+        </div>
+
+        <StatusFilter activeFilter={activeFilter} onFilterChange={setActiveFilter} />
+        <TrackList
+          tracks={visibleTracks}
+          onDelete={handleDelete}
+          onEdit={handleEdit}
+          searchQuery={searchQuery}
+        />
+      </div>
+    </main>
   );
 }
 

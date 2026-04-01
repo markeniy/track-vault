@@ -15,7 +15,7 @@ function AuthForm() {
     });
 
     if (error) {
-      console.error('Google auth error:', error);
+      console.error('Ошибка входа через Google:', error);
     }
   }
 
@@ -36,7 +36,7 @@ function AuthForm() {
     const { error } = await authAction;
 
     if (error) {
-      console.error('Auth error:', error);
+      console.error('Ошибка авторизации:', error);
       return;
     }
 
@@ -47,27 +47,23 @@ function AuthForm() {
   return (
     <main className="auth-shell">
       <div className="auth-card">
-        <p className="auth-eyebrow">Private Artist Workspace</p>
-        <h1 className="app-title">Track Vault</h1>
+        <p className="auth-eyebrow">Приватное пространство артиста</p>
+        <h1 className="app-title">Трек Хранилище</h1>
         <p className="auth-text">
-          Sign in to see your private tracks or create a new account.
+          Войди, чтобы видеть свои приватные треки, или создай новый аккаунт.
         </p>
 
-        <button
-          type="button"
-          className="oauth-button"
-          onClick={handleGoogleSignIn}
-        >
-          Continue with Google
+        <button type="button" className="oauth-button" onClick={handleGoogleSignIn}>
+          Продолжить через Google
         </button>
 
         <div className="auth-divider">
-          <span>or use email</span>
+          <span>или используй почту</span>
         </div>
 
         <form className="auth-form" onSubmit={handleSubmit}>
           <div className="form-field">
-            <label htmlFor="email">Email</label>
+            <label htmlFor="email">Почта</label>
             <input
               id="email"
               type="email"
@@ -81,7 +77,7 @@ function AuthForm() {
           </div>
 
           <div className="form-field">
-            <label htmlFor="password">Password</label>
+            <label htmlFor="password">Пароль</label>
             <input
               id="password"
               type="password"
@@ -89,13 +85,13 @@ function AuthForm() {
               onChange={function (event) {
                 setPassword(event.target.value);
               }}
-              placeholder="Enter your password"
+              placeholder="Введите пароль"
               required
             />
           </div>
 
           <button type="submit" className="save-track-button auth-submit-button">
-            {mode === 'sign-up' ? 'Sign Up' : 'Sign In'}
+            {mode === 'sign-up' ? 'Зарегистрироваться' : 'Войти'}
           </button>
         </form>
 
@@ -109,8 +105,8 @@ function AuthForm() {
           }}
         >
           {mode === 'sign-up'
-            ? 'Already have an account? Sign In'
-            : 'Need an account? Sign Up'}
+            ? 'Уже есть аккаунт? Войти'
+            : 'Нет аккаунта? Зарегистрироваться'}
         </button>
       </div>
     </main>
