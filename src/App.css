@@ -114,6 +114,7 @@
   flex-wrap: wrap;
   gap: 12px;
   justify-content: flex-end;
+  align-self: flex-end;
 }
 
 .auth-eyebrow {
@@ -220,8 +221,7 @@
   max-width: 52ch;
 }
 
-.add-track-button,
-.save-track-button {
+.add-track-button {
   border: 1px solid rgba(201, 169, 97, 0.58);
   border-radius: 999px;
   padding: 12px 18px;
@@ -233,6 +233,24 @@
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
   box-shadow: 0 12px 32px rgba(201, 169, 97, 0.18);
+}
+
+.save-track-button {
+  width: 100%;
+  justify-self: stretch;
+  align-self: end;
+  border: 1px solid rgba(201, 169, 97, 0.3);
+  border-radius: 20px;
+  padding: 14px 16px;
+  background:
+    linear-gradient(135deg, rgba(216, 187, 122, 0.92) 0%, rgba(160, 127, 61, 0.96) 100%);
+  color: #17130b;
+  font-size: 0.96rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  box-shadow: 0 10px 24px rgba(201, 169, 97, 0.14);
 }
 
 .add-track-button:hover,
@@ -836,8 +854,18 @@
   margin-bottom: 8px;
 }
 
+.track-comment-meta-copy {
+  display: grid;
+  gap: 4px;
+}
+
 .track-comment-meta strong {
   color: var(--text);
+}
+
+.track-comment-date {
+  color: var(--muted);
+  font-size: 0.84rem;
 }
 
 .track-comment-body {

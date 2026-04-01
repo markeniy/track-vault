@@ -27,6 +27,20 @@ function TrackList({
     public: '\u041f\u0443\u0431\u043b\u0438\u0447\u043d\u044b\u0439',
   };
 
+  function formatCommentDate(value) {
+    if (!value) {
+      return '';
+    }
+
+    return new Date(value).toLocaleString('ru-RU', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
+
   function handleToggleExpand(trackId) {
     setExpandedTrackIds(function (currentIds) {
       if (currentIds.includes(trackId)) {
@@ -171,7 +185,12 @@ function TrackList({
                           return (
                             <div key={comment.id} className="track-comment-item">
                               <div className="track-comment-meta">
-                                <strong>{comment.author_name}</strong>
+                                <div className="track-comment-meta-copy">
+                                  <strong>{comment.author_name}</strong>
+                                  <span className="track-comment-date">
+                                    {formatCommentDate(comment.created_at)}
+                                  </span>
+                                </div>
                                 {isOwnComment ? (
                                   <button
                                     type="button"

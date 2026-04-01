@@ -373,6 +373,13 @@ function App() {
       visibility: track.visibility || 'private',
     });
     setIsFormOpen(true);
+
+    window.setTimeout(function () {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth',
+      });
+    }, 0);
   }
 
   function handleResetTools() {
@@ -776,6 +783,12 @@ function App() {
 
   async function handleDelete(id) {
     if (!session?.user) {
+      return;
+    }
+
+    const shouldDelete = window.confirm('Удалить этот трек? Это действие нельзя отменить.');
+
+    if (!shouldDelete) {
       return;
     }
 
