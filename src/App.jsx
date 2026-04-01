@@ -1,6 +1,7 @@
 ﻿import { useEffect, useState } from 'react';
 import './App.css';
 import AuthForm from './components/AuthForm';
+import CustomSelect from './components/CustomSelect';
 import Header from './components/Header';
 import StatusFilter from './components/StatusFilter';
 import TrackList from './components/TrackList';
@@ -137,6 +138,11 @@ function App() {
     });
   }
 
+  const visibilityOptions = [
+    { value: 'private', label: 'Приватный' },
+    { value: 'public', label: 'Публичный' },
+  ];
+
   function handleEdit(track) {
     setFeedback({
       type: '',
@@ -154,10 +160,18 @@ function App() {
   }
 
   function handleResetTools() {
+    setActiveLibrary('mine');
     setActiveAudienceFilter('mine');
     setActiveFilter('all');
     setSearchQuery('');
     setSortBy('newest');
+  }
+
+  function handleAudienceFilterChange(event) {
+    const nextValue = event.target.value;
+
+    setActiveAudienceFilter(nextValue);
+    setActiveLibrary(nextValue === 'public' ? 'community' : 'mine');
   }
 
   async function handleSubmit(event) {
@@ -337,10 +351,6 @@ function App() {
   }
 
   const libraryTracks = tracks.filter(function (track) {
-    if (activeLibrary === 'community') {
-      return track.user_id !== session.user.id && track.visibility === 'public';
-    }
-
     if (activeAudienceFilter === 'all') {
       return true;
     }
@@ -505,17 +515,18 @@ function App() {
 
                 <div className="form-field">
                   <label htmlFor="status">Статус</label>
-                  <select
+                  <CustomSelect
                     id="status"
                     name="status"
                     value={formData.status}
                     onChange={handleChange}
-                  >
-                    <option value="idea">Идея</option>
-                    <option value="draft">Черновик</option>
-                    <option value="mix">Микс</option>
-                    <option value="released">Релиз</option>
-                  </select>
+                    options={[
+                      { value: 'idea', label: 'Идея' },
+                      { value: 'draft', label: 'Черновик' },
+                      { value: 'mix', label: 'Микс' },
+                      { value: 'released', label: 'Релиз' },
+                    ]}
+                  />
                 </div>
 
                 <div className="form-field form-field-wide">
@@ -532,15 +543,13 @@ function App() {
 
                 <div className="form-field">
                   <label htmlFor="visibility">Доступ</label>
-                  <select
+                  <CustomSelect
                     id="visibility"
                     name="visibility"
                     value={formData.visibility}
                     onChange={handleChange}
-                  >
-                    <option value="private">Приватный</option>
-                    <option value="public">Публичный</option>
-                  </select>
+                    options={visibilityOptions}
+                  />
                 </div>
 
                 <button type="submit" className="save-track-button" disabled={isSaving}>
@@ -553,58 +562,7 @@ function App() {
               </form>
             ) : null}
 
-            {activeLibrary === 'mine' ? (
-              <div className="audience-filter-panel">
-                <div className="section-heading">
-                  <p className="section-label">Источник заметок</p>
-                  <h2 className="section-title">Все / Только мои / Публичные</h2>
-                </div>
-
-                <div className="status-filter">
-                  <button
-                    type="button"
-                    className={
-                      activeAudienceFilter === 'all'
-                        ? 'filter-button active'
-                        : 'filter-button'
-                    }
-                    onClick={function () {
-                      setActiveAudienceFilter('all');
-                    }}
-                  >
-                    Все
-                  </button>
-                  <button
-                    type="button"
-                    className={
-                      activeAudienceFilter === 'mine'
-                        ? 'filter-button active'
-                        : 'filter-button'
-                    }
-                    onClick={function () {
-                      setActiveAudienceFilter('mine');
-                    }}
-                  >
-                    Только мои
-                  </button>
-                  <button
-                    type="button"
-                    className={
-                      activeAudienceFilter === 'public'
-                        ? 'filter-button active'
-                        : 'filter-button'
-                    }
-                    onClick={function () {
-                      setActiveAudienceFilter('public');
-                    }}
-                  >
-                    Публичные
-                  </button>
-                </div>
-              </div>
-            ) : null}
-
-            <div className="tools-grid">
+            <div className="tools-grid tools-grid-single">
               <div className="search-panel">
                 <div className="section-heading">
                   <p className="section-label">Поиск</p>
@@ -623,29 +581,6 @@ function App() {
                   />
                 </div>
               </div>
-
-              <div className="sort-panel">
-                <div className="section-heading">
-                  <p className="section-label">Сортировка</p>
-                  <h2 className="section-title">Порядок списка</h2>
-                </div>
-
-                <div className="form-field">
-                  <select
-                    value={sortBy}
-                    onChange={function (event) {
-                      setSortBy(event.target.value);
-                    }}
-                  >
-                    <option value="newest">Сначала новые</option>
-                    <option value="oldest">Сначала старые</option>
-                    <option value="bpm-asc">BPM: по возрастанию</option>
-                    <option value="bpm-desc">BPM: по убыванию</option>
-                    <option value="title-asc">Название: А-Я</option>
-                    <option value="title-desc">Название: Я-А</option>
-                  </select>
-                </div>
-              </div>
             </div>
 
             <div className="tools-actions">
@@ -654,7 +589,18 @@ function App() {
               </button>
             </div>
 
-            <StatusFilter activeFilter={activeFilter} onFilterChange={setActiveFilter} />
+            <StatusFilter
+              activeFilter={activeFilter}
+              onFilterChange={function (event) {
+                setActiveFilter(event.target.value);
+              }}
+              sortBy={sortBy}
+              onSortChange={function (event) {
+                setSortBy(event.target.value);
+              }}
+              activeAudienceFilter={activeAudienceFilter}
+              onAudienceChange={handleAudienceFilterChange}
+            />
             <TrackList
               tracks={visibleTracks}
               onDelete={handleDelete}
