@@ -382,21 +382,26 @@ function App() {
 
     const fileExt = (file.name.split('.').pop() || 'png').toLowerCase();
     const safeExt = ['jpg', 'jpeg', 'png', 'webp'].includes(fileExt) ? fileExt : 'png';
-    const filePath = session.user.id + '/avatar.' + safeExt;
+    const filePath = session.user.id + '/avatar-' + Date.now() + '.' + safeExt;
 
     const { error: uploadError } = await supabase.storage
       .from('avatars')
       .upload(filePath, file, {
-        upsert: true,
+        cacheControl: '3600',
+        upsert: false,
+        contentType: file.type || 'image/' + safeExt,
       });
 
     if (uploadError) {
       console.error('Ошибка загрузки аватарки:', uploadError);
       setFeedback({
         type: 'error',
-        text: 'Не удалось загрузить аватарку. Проверь формат файла и попробуй ещё раз.',
+        text:
+          uploadError.message ||
+          'Не удалось загрузить аватарку. Проверь формат файла и попробуй ещё раз.',
       });
       setIsAvatarUploading(false);
+      event.target.value = '';
       return;
     }
 
@@ -422,9 +427,12 @@ function App() {
       console.error('Ошибка сохранения аватарки:', error);
       setFeedback({
         type: 'error',
-        text: 'Аватарка загрузилась, но ссылка не сохранилась в профиле. Попробуй ещё раз.',
+        text:
+          error.message ||
+          'Аватарка загрузилась, но ссылка не сохранилась в профиле. Попробуй ещё раз.',
       });
       setIsAvatarUploading(false);
+      event.target.value = '';
       return;
     }
 
