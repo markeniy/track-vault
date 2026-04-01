@@ -11,12 +11,15 @@ const initialForm = {
   bpm: '',
   status: 'idea',
   comment: '',
+  visibility: 'private',
 };
 
 function App() {
   const [session, setSession] = useState(null);
   const [isSessionLoading, setIsSessionLoading] = useState(true);
   const [tracks, setTracks] = useState([]);
+  const [activeLibrary, setActiveLibrary] = useState('mine');
+  const [activeAudienceFilter, setActiveAudienceFilter] = useState('mine');
   const [activeFilter, setActiveFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('newest');
@@ -45,7 +48,7 @@ function App() {
     const { data, error } = await supabase
       .from('tracks')
       .select('*')
-      .eq('user_id', userId)
+      .or('user_id.eq.' + userId + ',visibility.eq.public')
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -145,11 +148,13 @@ function App() {
       bpm: String(track.bpm),
       status: track.status,
       comment: track.comment || '',
+      visibility: track.visibility || 'private',
     });
     setIsFormOpen(true);
   }
 
   function handleResetTools() {
+    setActiveAudienceFilter('mine');
     setActiveFilter('all');
     setSearchQuery('');
     setSortBy('newest');
@@ -180,6 +185,7 @@ function App() {
           bpm: Number(formData.bpm),
           status: formData.status,
           comment: formData.comment,
+          visibility: formData.visibility,
         })
         .eq('id', editingTrackId)
         .eq('user_id', session.user.id)
@@ -195,6 +201,7 @@ function App() {
             title: formData.title,
             bpm: Number(formData.bpm),
             status: formData.status,
+            visibility: formData.visibility,
           })
           .eq('id', editingTrackId)
           .eq('user_id', session.user.id)
@@ -236,6 +243,7 @@ function App() {
         bpm: Number(formData.bpm),
         status: formData.status,
         comment: formData.comment,
+        visibility: formData.visibility,
         user_id: session.user.id,
       };
 
@@ -255,6 +263,7 @@ function App() {
               title: formData.title,
               bpm: Number(formData.bpm),
               status: formData.status,
+              visibility: formData.visibility,
               user_id: session.user.id,
             },
           ])
@@ -327,10 +336,26 @@ function App() {
     }
   }
 
+  const libraryTracks = tracks.filter(function (track) {
+    if (activeLibrary === 'community') {
+      return track.user_id !== session.user.id && track.visibility === 'public';
+    }
+
+    if (activeAudienceFilter === 'all') {
+      return true;
+    }
+
+    if (activeAudienceFilter === 'public') {
+      return track.user_id !== session.user.id && track.visibility === 'public';
+    }
+
+    return track.user_id === session.user.id;
+  });
+
   const filteredTracks =
     activeFilter === 'all'
-      ? tracks
-      : tracks.filter(function (track) {
+      ? libraryTracks
+      : libraryTracks.filter(function (track) {
           return track.status === activeFilter;
         });
 
@@ -389,159 +414,256 @@ function App() {
   return (
     <main className="app-shell">
       <div className="app-card">
-        <div className="app-topbar">
-          <Header trackCount={tracks.length} userEmail={session.user.email} />
-          <div className="topbar-actions">
-            <button type="button" className="add-track-button" onClick={handleToggleForm}>
-              {isFormOpen ? 'Закрыть форму' : 'Добавить трек'}
+        <div className="workspace-layout">
+          <aside className="sidebar-nav">
+            <p className="section-label">Библиотека</p>
+            <button
+              type="button"
+              className={
+                activeLibrary === 'mine' ? 'library-button active' : 'library-button'
+              }
+              onClick={function () {
+                setActiveLibrary('mine');
+                setActiveAudienceFilter('mine');
+              }}
+            >
+              Мои заметки
             </button>
-            <button type="button" className="secondary-button" onClick={handleSignOut}>
-              Выйти
+            <button
+              type="button"
+              className={
+                activeLibrary === 'community' ? 'library-button active' : 'library-button'
+              }
+              onClick={function () {
+                setActiveLibrary('community');
+                setActiveAudienceFilter('public');
+              }}
+            >
+              Заметки других артистов
             </button>
-          </div>
-        </div>
+          </aside>
 
-        {feedback.text ? (
-          <div
-            className={
-              feedback.type === 'error'
-                ? 'form-message form-message-error'
-                : 'form-message form-message-info'
-            }
-          >
-            {feedback.text}
-          </div>
-        ) : null}
-
-        {isFormOpen ? (
-          <form className="track-form" onSubmit={handleSubmit}>
-            <div className="section-heading form-heading">
-              <p className="section-label">Редактор трека</p>
-              <h2 className="section-title">
-                {editingTrackId ? 'Редактировать трек' : 'Добавить новый трек'}
-              </h2>
+          <div className="workspace-main">
+            <div className="app-topbar">
+              <Header trackCount={libraryTracks.length} userEmail={session.user.email} />
+              <div className="topbar-actions">
+                <button type="button" className="add-track-button" onClick={handleToggleForm}>
+                  {isFormOpen ? 'Закрыть форму' : 'Добавить трек'}
+                </button>
+                <button type="button" className="secondary-button" onClick={handleSignOut}>
+                  Выйти
+                </button>
+              </div>
             </div>
 
-            <div className="form-field">
-              <label htmlFor="title">Название</label>
-              <input
-                id="title"
-                name="title"
-                type="text"
-                value={formData.title}
-                onChange={handleChange}
-                placeholder="Введите название трека"
-                required
-              />
-            </div>
-
-            <div className="form-field">
-              <label htmlFor="bpm">BPM</label>
-              <input
-                id="bpm"
-                name="bpm"
-                type="number"
-                value={formData.bpm}
-                onChange={handleChange}
-                placeholder="Введите BPM"
-                required
-              />
-            </div>
-
-            <div className="form-field">
-              <label htmlFor="status">Статус</label>
-              <select
-                id="status"
-                name="status"
-                value={formData.status}
-                onChange={handleChange}
+            {feedback.text ? (
+              <div
+                className={
+                  feedback.type === 'error'
+                    ? 'form-message form-message-error'
+                    : 'form-message form-message-info'
+                }
               >
-                <option value="idea">Идея</option>
-                <option value="draft">Черновик</option>
-                <option value="mix">Микс</option>
-                <option value="released">Релиз</option>
-              </select>
+                {feedback.text}
+              </div>
+            ) : null}
+
+            {isFormOpen ? (
+              <form className="track-form" onSubmit={handleSubmit}>
+                <div className="section-heading form-heading">
+                  <p className="section-label">Редактор трека</p>
+                  <h2 className="section-title">
+                    {editingTrackId ? 'Редактировать трек' : 'Добавить новый трек'}
+                  </h2>
+                </div>
+
+                <div className="form-field">
+                  <label htmlFor="title">Название</label>
+                  <input
+                    id="title"
+                    name="title"
+                    type="text"
+                    value={formData.title}
+                    onChange={handleChange}
+                    placeholder="Введите название трека"
+                    required
+                  />
+                </div>
+
+                <div className="form-field">
+                  <label htmlFor="bpm">BPM</label>
+                  <input
+                    id="bpm"
+                    name="bpm"
+                    type="number"
+                    value={formData.bpm}
+                    onChange={handleChange}
+                    placeholder="Введите BPM"
+                    required
+                  />
+                </div>
+
+                <div className="form-field">
+                  <label htmlFor="status">Статус</label>
+                  <select
+                    id="status"
+                    name="status"
+                    value={formData.status}
+                    onChange={handleChange}
+                  >
+                    <option value="idea">Идея</option>
+                    <option value="draft">Черновик</option>
+                    <option value="mix">Микс</option>
+                    <option value="released">Релиз</option>
+                  </select>
+                </div>
+
+                <div className="form-field form-field-wide">
+                  <label htmlFor="comment">Заметки / Текст</label>
+                  <textarea
+                    id="comment"
+                    name="comment"
+                    value={formData.comment}
+                    onChange={handleChange}
+                    placeholder="Запиши идеи, текст куплета, референсы или любые рабочие заметки"
+                    rows="6"
+                  />
+                </div>
+
+                <div className="form-field">
+                  <label htmlFor="visibility">Доступ</label>
+                  <select
+                    id="visibility"
+                    name="visibility"
+                    value={formData.visibility}
+                    onChange={handleChange}
+                  >
+                    <option value="private">Приватный</option>
+                    <option value="public">Публичный</option>
+                  </select>
+                </div>
+
+                <button type="submit" className="save-track-button" disabled={isSaving}>
+                  {isSaving
+                    ? 'Сохраняем...'
+                    : editingTrackId
+                      ? 'Сохранить изменения'
+                      : 'Сохранить трек'}
+                </button>
+              </form>
+            ) : null}
+
+            {activeLibrary === 'mine' ? (
+              <div className="audience-filter-panel">
+                <div className="section-heading">
+                  <p className="section-label">Источник заметок</p>
+                  <h2 className="section-title">Все / Только мои / Публичные</h2>
+                </div>
+
+                <div className="status-filter">
+                  <button
+                    type="button"
+                    className={
+                      activeAudienceFilter === 'all'
+                        ? 'filter-button active'
+                        : 'filter-button'
+                    }
+                    onClick={function () {
+                      setActiveAudienceFilter('all');
+                    }}
+                  >
+                    Все
+                  </button>
+                  <button
+                    type="button"
+                    className={
+                      activeAudienceFilter === 'mine'
+                        ? 'filter-button active'
+                        : 'filter-button'
+                    }
+                    onClick={function () {
+                      setActiveAudienceFilter('mine');
+                    }}
+                  >
+                    Только мои
+                  </button>
+                  <button
+                    type="button"
+                    className={
+                      activeAudienceFilter === 'public'
+                        ? 'filter-button active'
+                        : 'filter-button'
+                    }
+                    onClick={function () {
+                      setActiveAudienceFilter('public');
+                    }}
+                  >
+                    Публичные
+                  </button>
+                </div>
+              </div>
+            ) : null}
+
+            <div className="tools-grid">
+              <div className="search-panel">
+                <div className="section-heading">
+                  <p className="section-label">Поиск</p>
+                  <h2 className="section-title">Название и заметки</h2>
+                </div>
+
+                <div className="search-input-wrap">
+                  <span className="search-icon" aria-hidden="true">Поиск</span>
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={function (event) {
+                      setSearchQuery(event.target.value);
+                    }}
+                    placeholder=""
+                  />
+                </div>
+              </div>
+
+              <div className="sort-panel">
+                <div className="section-heading">
+                  <p className="section-label">Сортировка</p>
+                  <h2 className="section-title">Порядок списка</h2>
+                </div>
+
+                <div className="form-field">
+                  <select
+                    value={sortBy}
+                    onChange={function (event) {
+                      setSortBy(event.target.value);
+                    }}
+                  >
+                    <option value="newest">Сначала новые</option>
+                    <option value="oldest">Сначала старые</option>
+                    <option value="bpm-asc">BPM: по возрастанию</option>
+                    <option value="bpm-desc">BPM: по убыванию</option>
+                    <option value="title-asc">Название: А-Я</option>
+                    <option value="title-desc">Название: Я-А</option>
+                  </select>
+                </div>
+              </div>
             </div>
 
-            <div className="form-field form-field-wide">
-              <label htmlFor="comment">Заметки / Текст</label>
-              <textarea
-                id="comment"
-                name="comment"
-                value={formData.comment}
-                onChange={handleChange}
-                placeholder="Запиши идеи, текст куплета, референсы или любые рабочие заметки"
-                rows="6"
-              />
+            <div className="tools-actions">
+              <button type="button" className="secondary-button" onClick={handleResetTools}>
+                Сбросить фильтры
+              </button>
             </div>
 
-            <button type="submit" className="save-track-button" disabled={isSaving}>
-              {isSaving
-                ? 'Сохраняем...'
-                : editingTrackId
-                  ? 'Сохранить изменения'
-                  : 'Сохранить трек'}
-            </button>
-          </form>
-        ) : null}
-
-        <div className="tools-grid">
-          <div className="search-panel">
-            <div className="section-heading">
-              <p className="section-label">Поиск</p>
-              <h2 className="section-title">Название и заметки</h2>
-            </div>
-
-            <div className="search-input-wrap">
-              <span className="search-icon" aria-hidden="true">Поиск</span>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={function (event) {
-                  setSearchQuery(event.target.value);
-                }}
-                placeholder="Ищи по названию трека, тексту песни или заметкам"
-              />
-            </div>
-          </div>
-
-          <div className="sort-panel">
-            <div className="section-heading">
-              <p className="section-label">Сортировка</p>
-              <h2 className="section-title">Порядок списка</h2>
-            </div>
-
-            <div className="form-field">
-              <select
-                value={sortBy}
-                onChange={function (event) {
-                  setSortBy(event.target.value);
-                }}
-              >
-                <option value="newest">Сначала новые</option>
-                <option value="oldest">Сначала старые</option>
-                <option value="bpm-asc">BPM: по возрастанию</option>
-                <option value="bpm-desc">BPM: по убыванию</option>
-                <option value="title-asc">Название: А-Я</option>
-                <option value="title-desc">Название: Я-А</option>
-              </select>
-            </div>
+            <StatusFilter activeFilter={activeFilter} onFilterChange={setActiveFilter} />
+            <TrackList
+              tracks={visibleTracks}
+              onDelete={handleDelete}
+              onEdit={handleEdit}
+              searchQuery={searchQuery}
+              currentUserId={session.user.id}
+            />
           </div>
         </div>
-
-        <div className="tools-actions">
-          <button type="button" className="secondary-button" onClick={handleResetTools}>
-            Сбросить фильтры
-          </button>
-        </div>
-
-        <StatusFilter activeFilter={activeFilter} onFilterChange={setActiveFilter} />
-        <TrackList
-          tracks={visibleTracks}
-          onDelete={handleDelete}
-          onEdit={handleEdit}
-          searchQuery={searchQuery}
-        />
       </div>
     </main>
   );

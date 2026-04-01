@@ -46,6 +46,53 @@
   width: min(100%, 520px);
 }
 
+.workspace-layout {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 28px;
+}
+
+.workspace-main {
+  min-width: 0;
+}
+
+.sidebar-nav {
+  align-self: start;
+  position: sticky;
+  top: 24px;
+  display: grid;
+  gap: 12px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: var(--panel-strong);
+}
+
+.library-button {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+}
+
+.library-button:hover {
+  border-color: var(--line-strong);
+  background: rgba(201, 169, 97, 0.08);
+  transform: translateY(-1px);
+}
+
+.library-button.active {
+  border-color: rgba(201, 169, 97, 0.58);
+  background:
+    linear-gradient(135deg, rgba(216, 187, 122, 0.22) 0%, rgba(160, 127, 61, 0.12) 100%);
+  color: var(--gold-soft);
+}
+
 .app-topbar {
   display: flex;
   align-items: flex-start;
@@ -230,11 +277,16 @@
 
 .search-panel,
 .sort-panel,
+.audience-filter-panel,
 .status-filter-wrap {
   padding: 22px;
   border: 1px solid var(--line);
   border-radius: 24px;
   background: var(--panel-strong);
+}
+
+.audience-filter-panel {
+  margin-bottom: 20px;
 }
 
 .status-filter-wrap {
@@ -458,6 +510,13 @@
   color: var(--muted);
 }
 
+.track-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+
 .track-comment {
   margin: 12px 0 0;
   padding: 14px 16px;
@@ -535,6 +594,31 @@
   color: #f5e7bf;
 }
 
+.track-visibility-badge,
+.track-owner-note {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  border: 1px solid rgba(201, 169, 97, 0.2);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.track-visibility-public {
+  border-color: rgba(90, 211, 176, 0.26);
+  background: rgba(90, 211, 176, 0.1);
+  color: #c8fff0;
+}
+
+.track-visibility-private {
+  border-color: rgba(201, 169, 97, 0.22);
+  background: rgba(201, 169, 97, 0.08);
+  color: var(--gold-soft);
+}
+
 .track-item-actions {
   display: flex;
   flex-wrap: wrap;
@@ -591,6 +675,14 @@
 }
 
 @media (max-width: 860px) {
+  .workspace-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar-nav {
+    position: static;
+  }
+
   .tools-grid {
     grid-template-columns: 1fr;
   }
