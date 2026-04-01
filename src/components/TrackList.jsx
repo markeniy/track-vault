@@ -10,6 +10,7 @@ function TrackList({
   onDeleteComment,
   searchQuery,
   currentUserId,
+  emptyStateMode = 'private',
 }) {
   const [expandedTrackIds, setExpandedTrackIds] = useState([]);
   const [commentDrafts, setCommentDrafts] = useState({});
@@ -110,7 +111,10 @@ function TrackList({
   if (tracks.length === 0) {
     return (
       <section className="track-list">
-        <EmptyState isSearchResult={Boolean(searchQuery.trim())} />
+        <EmptyState
+          isSearchResult={Boolean(searchQuery.trim())}
+          mode={emptyStateMode}
+        />
       </section>
     );
   }

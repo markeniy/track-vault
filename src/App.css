@@ -130,7 +130,7 @@
 }
 
 .app-title {
-  margin: 0;
+  margin: 0 0 16px;
   font-size: clamp(2.6rem, 4vw, 4.25rem);
   font-family: 'Times New Roman', Georgia, serif;
   font-weight: 600;

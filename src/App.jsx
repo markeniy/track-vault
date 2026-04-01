@@ -983,26 +983,26 @@ function App() {
             <button
               type="button"
               className={
-                activeLibrary === 'mine' ? 'library-button active' : 'library-button'
+                activeLibrary === 'profile' ? 'library-button active' : 'library-button'
               }
               onClick={function () {
-                setActiveLibrary('mine');
-                setActiveAudienceFilter('mine');
+                setActiveLibrary('profile');
               }}
             >
-              Мои заметки
+              Личный кабинет
             </button>
             <div className="library-subgroup">
               <button
                 type="button"
                 className={
-                  activeLibrary === 'profile' ? 'library-button active' : 'library-button'
+                  activeLibrary === 'mine' ? 'library-button active' : 'library-button'
                 }
                 onClick={function () {
-                  setActiveLibrary('profile');
+                  setActiveLibrary('mine');
+                  setActiveAudienceFilter('mine');
                 }}
               >
-                Личный кабинет
+                Мои заметки
               </button>
               <button
                 type="button"
@@ -1203,6 +1203,7 @@ function App() {
                   onDeleteComment={handleDeleteComment}
                   searchQuery={searchQuery}
                   currentUserId={session.user.id}
+                  emptyStateMode={activeLibrary === 'community' || activeAudienceFilter === 'public' ? 'public' : 'private'}
                 />
               </>
             )}
