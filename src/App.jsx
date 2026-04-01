@@ -1049,24 +1049,71 @@ function App() {
             ) : null}
 
             {activeLibrary === 'profile' ? (
-              <ProfilePanel
-                displayName={profileName}
-                email={session.user.email}
-                avatarUrl={profile.avatar_url}
-                onChange={handleProfileNameChange}
-                onSubmit={handleProfileSubmit}
-                onAvatarUpload={handleAvatarUpload}
-                onAvatarDelete={handleAvatarDelete}
-                isSaving={isProfileSaving}
-                isAvatarUploading={isAvatarUploading}
-                isAvatarDeleting={isAvatarDeleting}
-              />
+              <div className="profile-column">
+                <ProfilePanel
+                  displayName={profileName}
+                  email={session.user.email}
+                  avatarUrl={profile.avatar_url}
+                  onChange={handleProfileNameChange}
+                  onSubmit={handleProfileSubmit}
+                  onAvatarUpload={handleAvatarUpload}
+                  onAvatarDelete={handleAvatarDelete}
+                  isSaving={isProfileSaving}
+                  isAvatarUploading={isAvatarUploading}
+                  isAvatarDeleting={isAvatarDeleting}
+                />
+              </div>
             ) : (
-              <>
-                <div className="content-action-row">
-                  <button type="button" className="add-track-button" onClick={handleToggleForm}>
-                    {isFormOpen ? 'Закрыть форму' : 'Добавить трек'}
-                  </button>
+              <div className="feed-column">
+                <div className="feed-toolbar">
+                  <div className="content-action-row">
+                    <button type="button" className="add-track-button" onClick={handleToggleForm}>
+                      {isFormOpen ? 'Закрыть форму' : 'Добавить трек'}
+                    </button>
+                  </div>
+
+                  <div className="tools-grid tools-grid-single">
+                    <div className="search-panel">
+                      <div className="section-heading">
+                        <p className="section-label">Поиск</p>
+                        <h2 className="section-title">
+                          {activeLibrary === 'community'
+                            ? 'Название, заметки и имя артиста'
+                            : 'Название и заметки'}
+                        </h2>
+                      </div>
+
+                      <div className="search-input-wrap">
+                        {!searchQuery ? (
+                          <span className="search-icon" aria-hidden="true">
+                            Поиск
+                          </span>
+                        ) : null}
+                        <input
+                          type="text"
+                          value={searchQuery}
+                          onChange={function (event) {
+                            setSearchQuery(event.target.value);
+                          }}
+                          placeholder=""
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <StatusFilter
+                    activeFilter={activeFilter}
+                    onFilterChange={function (event) {
+                      setActiveFilter(event.target.value);
+                    }}
+                    sortBy={sortBy}
+                    onSortChange={function (event) {
+                      setSortBy(event.target.value);
+                    }}
+                    activeAudienceFilter={activeAudienceFilter}
+                    onAudienceChange={handleAudienceFilterChange}
+                    onReset={handleResetTools}
+                  />
                 </div>
 
                 {isFormOpen ? (
@@ -1153,48 +1200,6 @@ function App() {
                   </form>
                 ) : null}
 
-                <div className="tools-grid tools-grid-single">
-                  <div className="search-panel">
-                    <div className="section-heading">
-                      <p className="section-label">Поиск</p>
-                      <h2 className="section-title">
-                        {activeLibrary === 'community'
-                          ? 'Название, заметки и имя артиста'
-                          : 'Название и заметки'}
-                      </h2>
-                    </div>
-
-                <div className="search-input-wrap">
-                  {!searchQuery ? (
-                    <span className="search-icon" aria-hidden="true">Поиск</span>
-                  ) : null}
-                  <input
-                    type="text"
-                    value={searchQuery}
-                        onChange={function (event) {
-                          setSearchQuery(event.target.value);
-                        }}
-                        placeholder=""
-                      />
-                    </div>
-                  </div>
-                </div>
-
-
-                <StatusFilter
-                  activeFilter={activeFilter}
-                  onFilterChange={function (event) {
-                    setActiveFilter(event.target.value);
-                  }}
-                  sortBy={sortBy}
-                  onSortChange={function (event) {
-                    setSortBy(event.target.value);
-                  }}
-                  activeAudienceFilter={activeAudienceFilter}
-                  onAudienceChange={handleAudienceFilterChange}
-                  onReset={handleResetTools}
-                />
-
                 <TrackList
                   tracks={visibleTracks}
                   commentsByTrack={commentsByTrack}
@@ -1206,7 +1211,7 @@ function App() {
                   currentUserId={session.user.id}
                   emptyStateMode={activeLibrary === 'community' || activeAudienceFilter === 'public' ? 'public' : 'private'}
                 />
-              </>
+              </div>
             )}
           </div>
         </div>
