@@ -270,7 +270,7 @@ function App() {
     return (
       <main className="auth-shell">
         <div className="auth-card">
-          <h1 className="app-title">Трек Хранилище</h1>
+          <h1 className="app-title">Приватная студия релизов</h1>
           <p className="auth-text">Загрузка...</p>
         </div>
       </main>
@@ -427,4 +427,5 @@ function App() {
 }
 
 export default App;
+
 

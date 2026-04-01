@@ -48,7 +48,7 @@ function AuthForm() {
     <main className="auth-shell">
       <div className="auth-card">
         <p className="auth-eyebrow">Приватное пространство артиста</p>
-        <h1 className="app-title">Трек Хранилище</h1>
+        <h1 className="app-title">Приватная студия релизов</h1>
         <p className="auth-text">
           Войди, чтобы видеть свои приватные треки, или создай новый аккаунт.
         </p>
@@ -114,4 +114,5 @@ function AuthForm() {
 }
 
 export default AuthForm;
+
 

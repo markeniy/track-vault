@@ -1,18 +1,18 @@
-п»їfunction Header({ trackCount, userEmail }) {
+function Header({ trackCount, userEmail }) {
   return (
     <div className="header-block">
-      <p className="auth-eyebrow">РўСЂРµРє РҐСЂР°РЅРёР»РёС‰Рµ</p>
-      <h1 className="app-title">РџСЂРёРІР°С‚РЅР°СЏ СЃС‚СѓРґРёСЏ СЂРµР»РёР·РѕРІ</h1>
+      <p className="auth-eyebrow">Приватная студия релизов</p>
+      <h1 className="app-title">Приватная студия релизов</h1>
       <p className="header-subtitle">
-        РџСЂРµРјРёР°Р»СЊРЅРѕРµ СЂР°Р±РѕС‡РµРµ РїСЂРѕСЃС‚СЂР°РЅСЃС‚РІРѕ РґР»СЏ РґРµРјРѕРє, РјРёРєСЃРѕРІ Рё РіРѕС‚РѕРІС‹С… СЂРµР»РёР·РѕРІ.
+        Премиальное рабочее пространство для демок, миксов и готовых релизов.
       </p>
       <div className="header-meta">
         <div className="header-chip">
-          <span className="header-chip-label">РўСЂРµРєРё</span>
+          <span className="header-chip-label">Треки</span>
           <strong>{trackCount}</strong>
         </div>
         <div className="header-chip">
-          <span className="header-chip-label">РђРєРєР°СѓРЅС‚</span>
+          <span className="header-chip-label">Аккаунт</span>
           <strong>{userEmail}</strong>
         </div>
       </div>
@@ -21,4 +21,3 @@
 }
 
 export default Header;
-
