@@ -1027,6 +1027,7 @@ function App() {
                 displayName={profile.display_name || getDefaultDisplayName(session.user.email)}
                 avatarUrl={profile.avatar_url}
                 showTrackCount={activeLibrary !== 'community'}
+                showMeta={activeLibrary !== 'profile'}
               />
               <div className="topbar-actions">
                 <button type="button" className="secondary-button" onClick={handleSignOut}>
