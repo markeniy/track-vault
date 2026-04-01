@@ -61,10 +61,11 @@ function AuthForm() {
       console.error('Ошибка авторизации:', error);
       setFeedback({
         type: 'error',
-        text:
+        text: error.message || (
           mode === 'sign-up'
-            ? 'Не удалось зарегистрироваться. Проверь почту, пароль и настройки Email Auth в Supabase.'
-            : 'Не удалось войти. Проверь почту, пароль и подтверждение аккаунта.',
+            ? 'Не удалось зарегистрироваться.'
+            : 'Не удалось войти.'
+        ),
       });
       setIsSubmitting(false);
       return;
