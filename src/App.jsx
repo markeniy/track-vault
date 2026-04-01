@@ -23,6 +23,23 @@ function App() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [formData, setFormData] = useState(initialForm);
   const [editingTrackId, setEditingTrackId] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [feedback, setFeedback] = useState({
+    type: '',
+    text: '',
+  });
+
+  function isMissingCommentColumnError(error) {
+    const errorText = [
+      error?.message || '',
+      error?.details || '',
+      error?.hint || '',
+    ]
+      .join(' ')
+      .toLowerCase();
+
+    return errorText.includes('comment') && errorText.includes('column');
+  }
 
   async function loadTracksForUser(userId) {
     const { data, error } = await supabase
@@ -82,6 +99,11 @@ function App() {
   }, [session]);
 
   function handleToggleForm() {
+    setFeedback({
+      type: '',
+      text: '',
+    });
+
     if (isFormOpen) {
       setIsFormOpen(false);
       setEditingTrackId(null);
@@ -97,6 +119,13 @@ function App() {
   function handleChange(event) {
     const { name, value } = event.target;
 
+    if (feedback.text) {
+      setFeedback({
+        type: '',
+        text: '',
+      });
+    }
+
     setFormData(function (currentForm) {
       return {
         ...currentForm,
@@ -106,6 +135,10 @@ function App() {
   }
 
   function handleEdit(track) {
+    setFeedback({
+      type: '',
+      text: '',
+    });
     setEditingTrackId(track.id);
     setFormData({
       title: track.title,
@@ -124,13 +157,23 @@ function App() {
 
   async function handleSubmit(event) {
     event.preventDefault();
+    setFeedback({
+      type: '',
+      text: '',
+    });
 
     if (!session?.user) {
+      setFeedback({
+        type: 'error',
+        text: 'Сессия не найдена. Перезайди в аккаунт и попробуй снова.',
+      });
       return;
     }
 
+    setIsSaving(true);
+
     if (editingTrackId) {
-      const { data, error } = await supabase
+      let updateResult = await supabase
         .from('tracks')
         .update({
           title: formData.title,
@@ -143,8 +186,38 @@ function App() {
         .select()
         .single();
 
+      if (updateResult.error && isMissingCommentColumnError(updateResult.error)) {
+        console.error('Колонка comment не найдена:', updateResult.error);
+
+        updateResult = await supabase
+          .from('tracks')
+          .update({
+            title: formData.title,
+            bpm: Number(formData.bpm),
+            status: formData.status,
+          })
+          .eq('id', editingTrackId)
+          .eq('user_id', session.user.id)
+          .select()
+          .single();
+
+        if (!updateResult.error) {
+          setFeedback({
+            type: 'info',
+            text: 'Трек сохранён, но комментарий не записался. Чтобы он сохранялся, добавь колонку comment в таблицу tracks.',
+          });
+        }
+      }
+
+      const { data, error } = updateResult;
+
       if (error) {
         console.error('Ошибка обновления трека:', error);
+        setFeedback({
+          type: 'error',
+          text: 'Не удалось сохранить изменения. Проверь консоль и настройки таблицы tracks.',
+        });
+        setIsSaving(false);
         return;
       }
 
@@ -166,14 +239,45 @@ function App() {
         user_id: session.user.id,
       };
 
-      const { data, error } = await supabase
+      let insertResult = await supabase
         .from('tracks')
         .insert([newTrack])
         .select()
         .single();
 
+      if (insertResult.error && isMissingCommentColumnError(insertResult.error)) {
+        console.error('Колонка comment не найдена:', insertResult.error);
+
+        insertResult = await supabase
+          .from('tracks')
+          .insert([
+            {
+              title: formData.title,
+              bpm: Number(formData.bpm),
+              status: formData.status,
+              user_id: session.user.id,
+            },
+          ])
+          .select()
+          .single();
+
+        if (!insertResult.error) {
+          setFeedback({
+            type: 'info',
+            text: 'Трек сохранён, но комментарий не записался. Чтобы он сохранялся, добавь колонку comment в таблицу tracks.',
+          });
+        }
+      }
+
+      const { data, error } = insertResult;
+
       if (error) {
         console.error('Ошибка добавления трека:', error);
+        setFeedback({
+          type: 'error',
+          text: 'Не удалось сохранить трек. Проверь консоль и структуру таблицы tracks.',
+        });
+        setIsSaving(false);
         return;
       }
 
@@ -189,6 +293,7 @@ function App() {
     setFormData(initialForm);
     setEditingTrackId(null);
     setIsFormOpen(false);
+    setIsSaving(false);
   }
 
   async function handleDelete(id) {
@@ -296,6 +401,18 @@ function App() {
           </div>
         </div>
 
+        {feedback.text ? (
+          <div
+            className={
+              feedback.type === 'error'
+                ? 'form-message form-message-error'
+                : 'form-message form-message-info'
+            }
+          >
+            {feedback.text}
+          </div>
+        ) : null}
+
         {isFormOpen ? (
           <form className="track-form" onSubmit={handleSubmit}>
             <div className="section-heading form-heading">
@@ -358,8 +475,12 @@ function App() {
               />
             </div>
 
-            <button type="submit" className="save-track-button">
-              {editingTrackId ? 'Сохранить изменения' : 'Сохранить трек'}
+            <button type="submit" className="save-track-button" disabled={isSaving}>
+              {isSaving
+                ? 'Сохраняем...'
+                : editingTrackId
+                  ? 'Сохранить изменения'
+                  : 'Сохранить трек'}
             </button>
           </form>
         ) : null}
