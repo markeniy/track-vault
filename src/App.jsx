@@ -39,6 +39,7 @@ function App() {
   const [session, setSession] = useState(null);
   const [isSessionLoading, setIsSessionLoading] = useState(true);
   const [tracks, setTracks] = useState([]);
+  const [commentsByTrack, setCommentsByTrack] = useState({});
   const [profile, setProfile] = useState({
     display_name: '',
     avatar_url: '',
@@ -189,6 +190,74 @@ function App() {
     return mappedTracks;
   }
 
+  async function loadCommentsForTracks(trackList, userId) {
+    const trackIds = (trackList || []).map(function (track) {
+      return track.id;
+    });
+
+    if (trackIds.length === 0) {
+      setCommentsByTrack({});
+      return {};
+    }
+
+    const { data, error } = await supabase
+      .from('track_comments')
+      .select('id, track_id, user_id, body, created_at')
+      .in('track_id', trackIds)
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      console.error('Ошибка загрузки комментариев:', error);
+      setCommentsByTrack({});
+      return {};
+    }
+
+    const commentList = data || [];
+    const uniqueUserIds = [...new Set(commentList.map(function (comment) {
+      return comment.user_id;
+    }))];
+
+    let commentProfilesById = {};
+
+    if (uniqueUserIds.length > 0) {
+      const { data: commentProfiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, display_name')
+        .in('id', uniqueUserIds);
+
+      if (profilesError) {
+        console.error('Ошибка загрузки авторов комментариев:', profilesError);
+      } else {
+        commentProfilesById = (commentProfiles || []).reduce(function (result, item) {
+          result[item.id] = item;
+          return result;
+        }, {});
+      }
+    }
+
+    const groupedComments = commentList.reduce(function (result, comment) {
+      const authorProfile = commentProfilesById[comment.user_id];
+      const nextComment = {
+        ...comment,
+        author_name:
+          authorProfile?.display_name ||
+          (comment.user_id === userId
+            ? profile.display_name || getDefaultDisplayName(session?.user?.email)
+            : 'Артист'),
+      };
+
+      if (!result[comment.track_id]) {
+        result[comment.track_id] = [];
+      }
+
+      result[comment.track_id].push(nextComment);
+      return result;
+    }, {});
+
+    setCommentsByTrack(groupedComments);
+    return groupedComments;
+  }
+
   useEffect(function () {
     async function loadSession() {
       const { data, error } = await supabase.auth.getSession();
@@ -221,6 +290,7 @@ function App() {
     async function loadWorkspace() {
       if (!session?.user) {
         setTracks([]);
+        setCommentsByTrack({});
         setProfile({
           display_name: '',
           avatar_url: '',
@@ -230,7 +300,8 @@ function App() {
       }
 
       await loadProfileForUser(session.user);
-      await loadTracksForUser(session.user.id);
+      const nextTracks = await loadTracksForUser(session.user.id);
+      await loadCommentsForTracks(nextTracks, session.user.id);
     }
 
     loadWorkspace();
@@ -608,7 +679,8 @@ function App() {
       }
 
       if (!data) {
-        await loadTracksForUser(session.user.id);
+        const nextTracks = await loadTracksForUser(session.user.id);
+        await loadCommentsForTracks(nextTracks, session.user.id);
       } else {
         setTracks(function (currentTracks) {
           return currentTracks.map(function (track) {
@@ -675,7 +747,8 @@ function App() {
       }
 
       if (!data) {
-        await loadTracksForUser(session.user.id);
+        const nextTracks = await loadTracksForUser(session.user.id);
+        await loadCommentsForTracks(nextTracks, session.user.id);
       } else {
         setTracks(function (currentTracks) {
           return [
@@ -685,6 +758,12 @@ function App() {
             },
             ...currentTracks,
           ];
+        });
+        setCommentsByTrack(function (currentComments) {
+          return {
+            ...currentComments,
+            [data.id]: [],
+          };
         });
       }
     }
@@ -715,6 +794,86 @@ function App() {
       return previousTracks.filter(function (track) {
         return track.id !== id;
       });
+    });
+    setCommentsByTrack(function (currentComments) {
+      const nextComments = { ...currentComments };
+      delete nextComments[id];
+      return nextComments;
+    });
+  }
+
+  async function handleAddComment(trackId, body) {
+    if (!session?.user) {
+      return false;
+    }
+
+    const trimmedBody = body.trim();
+
+    if (!trimmedBody) {
+      return false;
+    }
+
+    const { data, error } = await supabase
+      .from('track_comments')
+      .insert([
+        {
+          track_id: trackId,
+          user_id: session.user.id,
+          body: trimmedBody,
+        },
+      ])
+      .select('id, track_id, user_id, body, created_at')
+      .single();
+
+    if (error) {
+      console.error('Ошибка добавления комментария:', error);
+      setFeedback({
+        type: 'error',
+        text: error.message || 'Не удалось оставить комментарий.',
+      });
+      return false;
+    }
+
+    const nextComment = {
+      ...data,
+      author_name: profile.display_name || getDefaultDisplayName(session.user.email),
+    };
+
+    setCommentsByTrack(function (currentComments) {
+      const trackComments = currentComments[trackId] || [];
+      return {
+        ...currentComments,
+        [trackId]: [...trackComments, nextComment],
+      };
+    });
+
+    return true;
+  }
+
+  async function handleDeleteComment(trackId, commentId) {
+    const { error } = await supabase
+      .from('track_comments')
+      .delete()
+      .eq('id', commentId)
+      .eq('user_id', session?.user?.id);
+
+    if (error) {
+      console.error('Ошибка удаления комментария:', error);
+      setFeedback({
+        type: 'error',
+        text: error.message || 'Не удалось удалить комментарий.',
+      });
+      return;
+    }
+
+    setCommentsByTrack(function (currentComments) {
+      const trackComments = currentComments[trackId] || [];
+      return {
+        ...currentComments,
+        [trackId]: trackComments.filter(function (comment) {
+          return comment.id !== commentId;
+        }),
+      };
     });
   }
 
@@ -807,7 +966,7 @@ function App() {
       <div className="app-card">
         <div className="workspace-layout">
           <aside className="sidebar-nav">
-            <p className="section-label">Библиотека</p>
+            <p className="section-label">Разделы</p>
             <button
               type="button"
               className={
@@ -824,6 +983,17 @@ function App() {
               <button
                 type="button"
                 className={
+                  activeLibrary === 'profile' ? 'library-button active' : 'library-button'
+                }
+                onClick={function () {
+                  setActiveLibrary('profile');
+                }}
+              >
+                Личный кабинет
+              </button>
+              <button
+                type="button"
+                className={
                   activeLibrary === 'community' ? 'library-button active' : 'library-button'
                 }
                 onClick={function () {
@@ -832,17 +1002,6 @@ function App() {
                 }}
               >
                 Заметки других артистов
-              </button>
-              <button
-                type="button"
-                className={
-                  activeLibrary === 'profile' ? 'library-button active' : 'library-button'
-                }
-                onClick={function () {
-                  setActiveLibrary('profile');
-                }}
-              >
-                Личный кабинет
               </button>
             </div>
           </aside>
@@ -854,6 +1013,7 @@ function App() {
                 userEmail={session.user.email}
                 displayName={profile.display_name || getDefaultDisplayName(session.user.email)}
                 avatarUrl={profile.avatar_url}
+                showTrackCount={activeLibrary !== 'community'}
               />
               <div className="topbar-actions">
                 {activeLibrary !== 'profile' ? (
@@ -1022,8 +1182,11 @@ function App() {
 
                 <TrackList
                   tracks={visibleTracks}
+                  commentsByTrack={commentsByTrack}
                   onDelete={handleDelete}
                   onEdit={handleEdit}
+                  onAddComment={handleAddComment}
+                  onDeleteComment={handleDeleteComment}
                   searchQuery={searchQuery}
                   currentUserId={session.user.id}
                 />

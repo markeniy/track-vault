@@ -138,7 +138,7 @@
 }
 
 .header-subtitle {
-  margin: 14px 0 0;
+  margin: 0;
   max-width: 46ch;
   color: var(--muted);
   font-size: 1.02rem;
@@ -800,6 +800,95 @@
   background:
     linear-gradient(180deg, rgba(201, 169, 97, 0.05), transparent 100%),
     rgba(255, 255, 255, 0.03);
+}
+
+.track-comments {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(201, 169, 97, 0.1);
+}
+
+.track-comments-title {
+  margin: 0 0 12px;
+  color: var(--gold-soft);
+  font-size: 0.9rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.track-comments-list {
+  display: grid;
+  gap: 12px;
+}
+
+.track-comment-item {
+  padding: 14px 16px;
+  border: 1px solid rgba(201, 169, 97, 0.12);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.track-comment-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.track-comment-meta strong {
+  color: var(--text);
+}
+
+.track-comment-body {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.comment-delete-button {
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #ffd5cf;
+  cursor: pointer;
+}
+
+.comment-delete-button:hover {
+  color: #fff0eb;
+}
+
+.track-comment-form {
+  margin-top: 18px;
+  display: grid;
+  gap: 12px;
+}
+
+.track-comment-form textarea {
+  width: 100%;
+  min-width: 0;
+  padding: 14px 16px;
+  border: 1px solid rgba(201, 169, 97, 0.18);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text);
+  outline: none;
+  resize: vertical;
+  min-height: 96px;
+}
+
+.track-comment-form textarea::placeholder {
+  color: rgba(182, 170, 146, 0.7);
+}
+
+.track-comment-form textarea:focus {
+  border-color: rgba(201, 169, 97, 0.48);
+  box-shadow: 0 0 0 4px rgba(201, 169, 97, 0.08);
+}
+
+.track-comment-submit {
+  width: fit-content;
 }
 
 .comment-toggle-button {

@@ -1,4 +1,4 @@
-function Header({ trackCount, userEmail, displayName, avatarUrl }) {
+function Header({ trackCount, userEmail, displayName, avatarUrl, showTrackCount = true }) {
   return (
     <div className="header-block">
       <p className="auth-eyebrow">
@@ -21,12 +21,14 @@ function Header({ trackCount, userEmail, displayName, avatarUrl }) {
             <div className="header-avatar-placeholder">&#128578;</div>
           )}
         </div>
-        <div className="header-chip">
-          <span className="header-chip-label">
-            {'\u0422\u0440\u0435\u043a\u0438'}
-          </span>
-          <strong>{trackCount}</strong>
-        </div>
+        {showTrackCount ? (
+          <div className="header-chip">
+            <span className="header-chip-label">
+              {'\u0422\u0440\u0435\u043a\u0438'}
+            </span>
+            <strong>{trackCount}</strong>
+          </div>
+        ) : null}
         <div className="header-chip">
           <span className="header-chip-label">
             {'\u0418\u043c\u044f'}
