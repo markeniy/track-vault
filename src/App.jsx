@@ -13,6 +13,7 @@ const initialForm = {
   bpm: '',
   status: 'idea',
   comment: '',
+  audio_url: '',
   visibility: 'private',
 };
 
@@ -370,6 +371,7 @@ function App() {
       bpm: String(track.bpm),
       status: track.status,
       comment: track.comment || '',
+      audio_url: track.audio_url || '',
       visibility: track.visibility || 'private',
     });
     setIsFormOpen(true);
@@ -642,6 +644,7 @@ function App() {
           bpm: Number(formData.bpm),
           status: formData.status,
           comment: formData.comment,
+          audio_url: formData.audio_url.trim(),
           visibility: formData.visibility,
         })
         .eq('id', editingTrackId)
@@ -658,6 +661,7 @@ function App() {
             title: formData.title,
             bpm: Number(formData.bpm),
             status: formData.status,
+            audio_url: formData.audio_url.trim(),
             visibility: formData.visibility,
           })
           .eq('id', editingTrackId)
@@ -706,6 +710,7 @@ function App() {
         bpm: Number(formData.bpm),
         status: formData.status,
         comment: formData.comment,
+        audio_url: formData.audio_url.trim(),
         visibility: formData.visibility,
         user_id: session.user.id,
       };
@@ -726,6 +731,7 @@ function App() {
               title: formData.title,
               bpm: Number(formData.bpm),
               status: formData.status,
+              audio_url: formData.audio_url.trim(),
               visibility: formData.visibility,
               user_id: session.user.id,
             },
@@ -1176,6 +1182,18 @@ function App() {
                         onChange={handleChange}
                         placeholder="Запиши идеи, текст куплета, референсы или любые рабочие заметки"
                         rows="6"
+                      />
+                    </div>
+
+                    <div className="form-field form-field-wide">
+                      <label htmlFor="audio_url">Ссылка на аудио</label>
+                      <input
+                        id="audio_url"
+                        name="audio_url"
+                        type="url"
+                        value={formData.audio_url}
+                        onChange={handleChange}
+                        placeholder="Вставь прямую mp3-ссылку или публичную ссылку на источник"
                       />
                     </div>
 

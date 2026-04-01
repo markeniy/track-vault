@@ -69,7 +69,7 @@
   top: 20px;
   display: grid;
   gap: 12px;
-  padding: 14px;
+  padding: 18px 14px 14px;
   border: 1px solid var(--line);
   border-radius: 20px;
   background: var(--panel-strong);
@@ -358,7 +358,7 @@
 
 .content-action-row {
   margin-bottom: 0;
-  width: min(100%, 260px);
+  width: 100%;
 }
 
 .search-panel,
@@ -468,6 +468,10 @@
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--gold);
+}
+
+.sidebar-nav > .section-label {
+  margin-bottom: 6px;
 }
 
 .section-title {
@@ -860,6 +864,24 @@
   line-height: 1.6;
 }
 
+.track-audio-block {
+  margin-top: 16px;
+  display: grid;
+  gap: 10px;
+}
+
+.track-audio-player {
+  width: 100%;
+  min-width: 0;
+  border-radius: 14px;
+  filter: sepia(0.18) saturate(0.82) brightness(0.96);
+}
+
+.track-audio-link {
+  width: fit-content;
+  text-decoration: none;
+}
+
 .track-comment-lyrics {
   font-family: 'Times New Roman', Georgia, serif;
   line-height: 1.85;
@@ -1115,9 +1137,11 @@
     position: static;
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 12px;
-    border-radius: 20px;
+    gap: 8px;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    background: transparent;
     overflow-x: auto;
     scrollbar-width: none;
   }
@@ -1191,8 +1215,11 @@
   }
 
   .feed-toolbar {
-    padding: 12px;
-    gap: 12px;
+    padding: 0;
+    gap: 10px;
+    border: none;
+    border-radius: 0;
+    background: transparent;
   }
 
   .search-panel,
@@ -1214,13 +1241,19 @@
 @media (max-width: 720px) {
   .app-shell,
   .auth-shell {
-    padding: 14px 10px;
+    padding: 0;
   }
 
   .app-card,
   .auth-card {
-    padding: 16px;
-    border-radius: 20px;
+    width: 100%;
+    min-height: 100vh;
+    padding: 16px 14px 24px;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
   }
 
   .track-item-header {
@@ -1237,22 +1270,33 @@
     align-items: stretch;
   }
 
-  .topbar-actions,
   .track-item-actions,
   .tools-actions {
     flex-direction: column;
   }
 
-  .header-chip {
-    min-width: 100%;
+  .topbar-actions {
+    flex-direction: row;
+    justify-content: flex-end;
   }
 
   .header-meta {
-    grid-template-columns: 72px minmax(0, 1fr);
+    grid-template-columns: 72px repeat(2, minmax(0, 1fr));
+    gap: 8px;
   }
 
   .header-chip:last-child {
     grid-column: 1 / -1;
+  }
+
+  .header-chip {
+    min-width: 0;
+    min-height: 66px;
+  }
+
+  .header-subtitle {
+    font-size: 1rem;
+    line-height: 1.58;
   }
 
   .header-avatar-chip {
@@ -1282,6 +1326,15 @@
   .track-list {
     padding: 16px;
     border-radius: 18px;
+  }
+
+  .status-filter-wrap,
+  .search-panel,
+  .track-form,
+  .profile-panel,
+  .track-list,
+  .form-message {
+    box-shadow: none;
   }
 
   .track-item {

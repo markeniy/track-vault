@@ -28,6 +28,17 @@ function TrackList({
     public: '\u041f\u0443\u0431\u043b\u0438\u0447\u043d\u044b\u0439',
   };
 
+  function isDirectAudioUrl(url) {
+    const value = (url || '').toLowerCase();
+
+    return (
+      value.includes('.mp3') ||
+      value.includes('.wav') ||
+      value.includes('.ogg') ||
+      value.includes('.m4a')
+    );
+  }
+
   function formatCommentDate(value) {
     if (!value) {
       return '';
@@ -139,6 +150,8 @@ function TrackList({
           const canComment = !isOwner && track.visibility === 'public';
           const trackComments = commentsByTrack[track.id] || [];
           const commentDraft = commentDrafts[track.id] || '';
+          const hasAudioUrl = Boolean(track.audio_url);
+          const canPlayAudio = isDirectAudioUrl(track.audio_url);
 
           return (
             <article key={track.id} className="track-item">
@@ -175,6 +188,28 @@ function TrackList({
                         ? '\u0421\u0432\u0435\u0440\u043d\u0443\u0442\u044c'
                         : '\u041f\u043e\u043a\u0430\u0437\u0430\u0442\u044c \u043f\u043e\u043b\u043d\u043e\u0441\u0442\u044c\u044e'}
                     </button>
+                  ) : null}
+
+                  {hasAudioUrl ? (
+                    <div className="track-audio-block">
+                      <p className="track-comments-title">
+                        {'\u0410\u0443\u0434\u0438\u043e'}
+                      </p>
+                      {canPlayAudio ? (
+                        <audio className="track-audio-player" controls preload="none">
+                          <source src={track.audio_url} />
+                        </audio>
+                      ) : (
+                        <a
+                          className="secondary-button track-audio-link"
+                          href={track.audio_url}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          {'\u041e\u0442\u043a\u0440\u044b\u0442\u044c \u0438\u0441\u0442\u043e\u0447\u043d\u0438\u043a'}
+                        </a>
+                      )}
+                    </div>
                   ) : null}
 
                   {trackComments.length > 0 ? (
