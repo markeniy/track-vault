@@ -20,6 +20,21 @@ function getDefaultDisplayName(email) {
   return (email || '').split('@')[0] || 'artist';
 }
 
+function getAvatarStoragePath(avatarUrl) {
+  if (!avatarUrl) {
+    return '';
+  }
+
+  const marker = '/storage/v1/object/public/avatars/';
+  const markerIndex = avatarUrl.indexOf(marker);
+
+  if (markerIndex === -1) {
+    return '';
+  }
+
+  return decodeURIComponent(avatarUrl.slice(markerIndex + marker.length));
+}
+
 function App() {
   const [session, setSession] = useState(null);
   const [isSessionLoading, setIsSessionLoading] = useState(true);
@@ -31,6 +46,7 @@ function App() {
   const [profileName, setProfileName] = useState('');
   const [isProfileSaving, setIsProfileSaving] = useState(false);
   const [isAvatarUploading, setIsAvatarUploading] = useState(false);
+  const [isAvatarDeleting, setIsAvatarDeleting] = useState(false);
   const [activeLibrary, setActiveLibrary] = useState('mine');
   const [activeAudienceFilter, setActiveAudienceFilter] = useState('mine');
   const [activeFilter, setActiveFilter] = useState('all');
@@ -383,6 +399,7 @@ function App() {
     const fileExt = (file.name.split('.').pop() || 'png').toLowerCase();
     const safeExt = ['jpg', 'jpeg', 'png', 'webp'].includes(fileExt) ? fileExt : 'png';
     const filePath = session.user.id + '/avatar-' + Date.now() + '.' + safeExt;
+    const previousAvatarPath = getAvatarStoragePath(profile.avatar_url);
 
     const { error: uploadError } = await supabase.storage
       .from('avatars')
@@ -442,12 +459,84 @@ function App() {
     };
 
     setProfile(nextProfile);
+    if (previousAvatarPath) {
+      const { error: removePreviousError } = await supabase.storage
+        .from('avatars')
+        .remove([previousAvatarPath]);
+
+      if (removePreviousError) {
+        console.error('Ошибка удаления старой аватарки:', removePreviousError);
+      }
+    }
+
     setFeedback({
       type: 'info',
       text: 'Аватарка обновлена.',
     });
     setIsAvatarUploading(false);
     event.target.value = '';
+  }
+
+  async function handleAvatarDelete() {
+    if (!session?.user || !profile.avatar_url) {
+      return;
+    }
+
+    setFeedback({
+      type: '',
+      text: '',
+    });
+    setIsAvatarDeleting(true);
+
+    const avatarPath = getAvatarStoragePath(profile.avatar_url);
+
+    if (avatarPath) {
+      const { error: removeError } = await supabase.storage
+        .from('avatars')
+        .remove([avatarPath]);
+
+      if (removeError) {
+        console.error('Ошибка удаления файла аватарки:', removeError);
+        setFeedback({
+          type: 'error',
+          text: removeError.message || 'Не удалось удалить файл аватарки.',
+        });
+        setIsAvatarDeleting(false);
+        return;
+      }
+    }
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .update({
+        avatar_url: null,
+      })
+      .eq('id', session.user.id)
+      .select('id, display_name, avatar_url')
+      .single();
+
+    if (error) {
+      console.error('Ошибка очистки avatar_url:', error);
+      setFeedback({
+        type: 'error',
+        text: error.message || 'Не удалось удалить аватарку из профиля.',
+      });
+      setIsAvatarDeleting(false);
+      return;
+    }
+
+    setProfile(function (currentProfile) {
+      return {
+        ...currentProfile,
+        display_name: data.display_name || currentProfile.display_name,
+        avatar_url: '',
+      };
+    });
+    setFeedback({
+      type: 'info',
+      text: 'Аватарка удалена.',
+    });
+    setIsAvatarDeleting(false);
   }
 
   async function handleSubmit(event) {
@@ -731,29 +820,31 @@ function App() {
             >
               Мои заметки
             </button>
-            <button
-              type="button"
-              className={
-                activeLibrary === 'community' ? 'library-button active' : 'library-button'
-              }
-              onClick={function () {
-                setActiveLibrary('community');
-                setActiveAudienceFilter('public');
-              }}
-            >
-              Заметки других артистов
-            </button>
-            <button
-              type="button"
-              className={
-                activeLibrary === 'profile' ? 'library-button active' : 'library-button'
-              }
-              onClick={function () {
-                setActiveLibrary('profile');
-              }}
-            >
-              Личный кабинет
-            </button>
+            <div className="library-subgroup">
+              <button
+                type="button"
+                className={
+                  activeLibrary === 'community' ? 'library-button active' : 'library-button'
+                }
+                onClick={function () {
+                  setActiveLibrary('community');
+                  setActiveAudienceFilter('public');
+                }}
+              >
+                Заметки других артистов
+              </button>
+              <button
+                type="button"
+                className={
+                  activeLibrary === 'profile' ? 'library-button active' : 'library-button'
+                }
+                onClick={function () {
+                  setActiveLibrary('profile');
+                }}
+              >
+                Личный кабинет
+              </button>
+            </div>
           </aside>
 
           <div className="workspace-main">
@@ -796,8 +887,10 @@ function App() {
                 onChange={handleProfileNameChange}
                 onSubmit={handleProfileSubmit}
                 onAvatarUpload={handleAvatarUpload}
+                onAvatarDelete={handleAvatarDelete}
                 isSaving={isProfileSaving}
                 isAvatarUploading={isAvatarUploading}
+                isAvatarDeleting={isAvatarDeleting}
               />
             ) : (
               <>

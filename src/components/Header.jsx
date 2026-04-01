@@ -1,14 +1,9 @@
 function Header({ trackCount, userEmail, displayName, avatarUrl }) {
-  const avatarLetter = (displayName || userEmail || 'A').charAt(0).toUpperCase();
-
   return (
     <div className="header-block">
       <p className="auth-eyebrow">
         {'\u041f\u0440\u0438\u0432\u0430\u0442\u043d\u0430\u044f \u0441\u0442\u0443\u0434\u0438\u044f \u0440\u0435\u043b\u0438\u0437\u043e\u0432'}
       </p>
-      <h1 className="app-title">
-        {'\u041f\u0440\u0438\u0432\u0430\u0442\u043d\u0430\u044f \u0441\u0442\u0443\u0434\u0438\u044f \u0440\u0435\u043b\u0438\u0437\u043e\u0432'}
-      </h1>
       <p className="header-subtitle">
         {
           '\u041f\u0440\u0435\u043c\u0438\u0430\u043b\u044c\u043d\u043e\u0435 \u0440\u0430\u0431\u043e\u0447\u0435\u0435 \u043f\u0440\u043e\u0441\u0442\u0440\u0430\u043d\u0441\u0442\u0432\u043e \u0434\u043b\u044f \u0434\u0435\u043c\u043e\u043a, \u043c\u0438\u043a\u0441\u043e\u0432 \u0438 \u0433\u043e\u0442\u043e\u0432\u044b\u0445 \u0440\u0435\u043b\u0438\u0437\u043e\u0432.'
@@ -23,7 +18,7 @@ function Header({ trackCount, userEmail, displayName, avatarUrl }) {
               className="header-avatar-image"
             />
           ) : (
-            <div className="header-avatar-placeholder">{avatarLetter}</div>
+            <div className="header-avatar-placeholder">&#128578;</div>
           )}
         </div>
         <div className="header-chip">

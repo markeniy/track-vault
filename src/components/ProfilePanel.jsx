@@ -5,11 +5,11 @@ function ProfilePanel({
   onChange,
   onSubmit,
   onAvatarUpload,
+  onAvatarDelete,
   isSaving,
   isAvatarUploading,
+  isAvatarDeleting,
 }) {
-  const avatarLetter = (displayName || email || 'A').charAt(0).toUpperCase();
-
   return (
     <section className="profile-panel">
       <div className="section-heading">
@@ -28,7 +28,7 @@ function ProfilePanel({
                 className="profile-avatar-image"
               />
             ) : (
-              <div className="profile-avatar-placeholder">{avatarLetter}</div>
+              <div className="profile-avatar-placeholder">&#128578;</div>
             )}
 
             <div className="profile-avatar-copy">
@@ -37,17 +37,34 @@ function ProfilePanel({
                   '\u0417\u0430\u0433\u0440\u0443\u0437\u0438 \u043a\u0432\u0430\u0434\u0440\u0430\u0442\u043d\u0443\u044e \u0438\u043b\u0438 \u043f\u043e\u0440\u0442\u0440\u0435\u0442\u043d\u0443\u044e \u043a\u0430\u0440\u0442\u0438\u043d\u043a\u0443. \u041c\u044b \u0441\u043e\u0445\u0440\u0430\u043d\u0438\u043c \u0435\u0451 \u0432 \u043f\u0440\u043e\u0444\u0438\u043b\u0435 \u0438 \u043f\u043e\u043a\u0430\u0436\u0435\u043c \u0432 \u0448\u0430\u043f\u043a\u0435.'
                 }
               </p>
-              <label className="secondary-button profile-upload-button">
-                <input
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp"
-                  className="profile-upload-input"
-                  onChange={onAvatarUpload}
-                />
-                {isAvatarUploading
-                  ? '\u0417\u0430\u0433\u0440\u0443\u0436\u0430\u0435\u043c \u0430\u0432\u0430\u0442\u0430\u0440...'
-                  : '\u0417\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044c \u0430\u0432\u0430\u0442\u0430\u0440'}
-              </label>
+              <div className="profile-avatar-actions">
+                <label className="secondary-button profile-upload-button">
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    className="profile-upload-input"
+                    onChange={onAvatarUpload}
+                  />
+                  {isAvatarUploading
+                    ? '\u0417\u0430\u0433\u0440\u0443\u0436\u0430\u0435\u043c...'
+                    : avatarUrl
+                      ? '\u0418\u0437\u043c\u0435\u043d\u0438\u0442\u044c'
+                      : '\u0417\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044c'}
+                </label>
+
+                {avatarUrl ? (
+                  <button
+                    type="button"
+                    className="delete-track-button profile-delete-button"
+                    onClick={onAvatarDelete}
+                    disabled={isAvatarDeleting}
+                  >
+                    {isAvatarDeleting
+                      ? '\u0423\u0434\u0430\u043b\u044f\u0435\u043c...'
+                      : '\u0423\u0434\u0430\u043b\u0438\u0442\u044c'}
+                  </button>
+                ) : null}
+              </div>
             </div>
           </div>
         </div>
