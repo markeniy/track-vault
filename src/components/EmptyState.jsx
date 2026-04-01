@@ -1,14 +1,15 @@
-function EmptyState() {
+п»їfunction EmptyState() {
   return (
     <div className="empty-state">
       <div className="empty-state-orb" />
-      <p className="empty-state-title">В твоём хранилище пока нет треков</p>
+      <p className="empty-state-title">Р’ С‚РІРѕС‘Рј С…СЂР°РЅРёР»РёС‰Рµ РїРѕРєР° РЅРµС‚ С‚СЂРµРєРѕРІ</p>
       <p className="empty-state-text">
-        Добавь первый трек, чтобы собрать приватный каталог идей, черновиков,
-        миксов и готовых релизов.
+        Р”РѕР±Р°РІСЊ РїРµСЂРІС‹Р№ С‚СЂРµРє, С‡С‚РѕР±С‹ СЃРѕР±СЂР°С‚СЊ РїСЂРёРІР°С‚РЅС‹Р№ РєР°С‚Р°Р»РѕРі РёРґРµР№, С‡РµСЂРЅРѕРІРёРєРѕРІ,
+        РјРёРєСЃРѕРІ Рё РіРѕС‚РѕРІС‹С… СЂРµР»РёР·РѕРІ.
       </p>
     </div>
   );
 }
 
 export default EmptyState;
+

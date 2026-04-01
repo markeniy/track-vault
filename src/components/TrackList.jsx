@@ -1,14 +1,14 @@
-import { Fragment, useState } from 'react';
+п»їimport { Fragment, useState } from 'react';
 import EmptyState from './EmptyState';
 
 function TrackList({ tracks, onDelete, onEdit, searchQuery }) {
   const [expandedTrackIds, setExpandedTrackIds] = useState([]);
 
   const statusLabels = {
-    idea: 'Идея',
-    draft: 'Черновик',
-    mix: 'Микс',
-    released: 'Релиз',
+    idea: 'РРґРµСЏ',
+    draft: 'Р§РµСЂРЅРѕРІРёРє',
+    mix: 'РњРёРєСЃ',
+    released: 'Р РµР»РёР·',
   };
 
   function handleToggleExpand(trackId) {
@@ -81,7 +81,7 @@ function TrackList({ tracks, onDelete, onEdit, searchQuery }) {
                         handleToggleExpand(track.id);
                       }}
                     >
-                      {isExpanded ? 'Свернуть' : 'Показать полностью'}
+                      {isExpanded ? 'РЎРІРµСЂРЅСѓС‚СЊ' : 'РџРѕРєР°Р·Р°С‚СЊ РїРѕР»РЅРѕСЃС‚СЊСЋ'}
                     </button>
                   ) : null}
                 </div>
@@ -96,7 +96,7 @@ function TrackList({ tracks, onDelete, onEdit, searchQuery }) {
                     onEdit(track);
                   }}
                 >
-                  Редактировать
+                  Р РµРґР°РєС‚РёСЂРѕРІР°С‚СЊ
                 </button>
                 <button
                   type="button"
@@ -105,7 +105,7 @@ function TrackList({ tracks, onDelete, onEdit, searchQuery }) {
                     onDelete(track.id);
                   }}
                 >
-                  Удалить
+                  РЈРґР°Р»РёС‚СЊ
                 </button>
               </div>
             </article>
@@ -117,3 +117,4 @@ function TrackList({ tracks, onDelete, onEdit, searchQuery }) {
 }
 
 export default TrackList;
+

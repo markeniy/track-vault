@@ -1,4 +1,4 @@
-import { useState } from 'react';
+п»їimport { useState } from 'react';
 import { supabase } from '../lib/supabase';
 
 function AuthForm() {
@@ -15,7 +15,7 @@ function AuthForm() {
     });
 
     if (error) {
-      console.error('Ошибка входа через Google:', error);
+      console.error('РћС€РёР±РєР° РІС…РѕРґР° С‡РµСЂРµР· Google:', error);
     }
   }
 
@@ -36,7 +36,7 @@ function AuthForm() {
     const { error } = await authAction;
 
     if (error) {
-      console.error('Ошибка авторизации:', error);
+      console.error('РћС€РёР±РєР° Р°РІС‚РѕСЂРёР·Р°С†РёРё:', error);
       return;
     }
 
@@ -47,23 +47,23 @@ function AuthForm() {
   return (
     <main className="auth-shell">
       <div className="auth-card">
-        <p className="auth-eyebrow">Приватное пространство артиста</p>
-        <h1 className="app-title">Трек Хранилище</h1>
+        <p className="auth-eyebrow">РџСЂРёРІР°С‚РЅРѕРµ РїСЂРѕСЃС‚СЂР°РЅСЃС‚РІРѕ Р°СЂС‚РёСЃС‚Р°</p>
+        <h1 className="app-title">РўСЂРµРє РҐСЂР°РЅРёР»РёС‰Рµ</h1>
         <p className="auth-text">
-          Войди, чтобы видеть свои приватные треки, или создай новый аккаунт.
+          Р’РѕР№РґРё, С‡С‚РѕР±С‹ РІРёРґРµС‚СЊ СЃРІРѕРё РїСЂРёРІР°С‚РЅС‹Рµ С‚СЂРµРєРё, РёР»Рё СЃРѕР·РґР°Р№ РЅРѕРІС‹Р№ Р°РєРєР°СѓРЅС‚.
         </p>
 
         <button type="button" className="oauth-button" onClick={handleGoogleSignIn}>
-          Продолжить через Google
+          РџСЂРѕРґРѕР»Р¶РёС‚СЊ С‡РµСЂРµР· Google
         </button>
 
         <div className="auth-divider">
-          <span>или используй почту</span>
+          <span>РёР»Рё РёСЃРїРѕР»СЊР·СѓР№ РїРѕС‡С‚Сѓ</span>
         </div>
 
         <form className="auth-form" onSubmit={handleSubmit}>
           <div className="form-field">
-            <label htmlFor="email">Почта</label>
+            <label htmlFor="email">РџРѕС‡С‚Р°</label>
             <input
               id="email"
               type="email"
@@ -77,7 +77,7 @@ function AuthForm() {
           </div>
 
           <div className="form-field">
-            <label htmlFor="password">Пароль</label>
+            <label htmlFor="password">РџР°СЂРѕР»СЊ</label>
             <input
               id="password"
               type="password"
@@ -85,13 +85,13 @@ function AuthForm() {
               onChange={function (event) {
                 setPassword(event.target.value);
               }}
-              placeholder="Введите пароль"
+              placeholder="Р’РІРµРґРёС‚Рµ РїР°СЂРѕР»СЊ"
               required
             />
           </div>
 
           <button type="submit" className="save-track-button auth-submit-button">
-            {mode === 'sign-up' ? 'Зарегистрироваться' : 'Войти'}
+            {mode === 'sign-up' ? 'Р—Р°СЂРµРіРёСЃС‚СЂРёСЂРѕРІР°С‚СЊСЃСЏ' : 'Р’РѕР№С‚Рё'}
           </button>
         </form>
 
@@ -105,8 +105,8 @@ function AuthForm() {
           }}
         >
           {mode === 'sign-up'
-            ? 'Уже есть аккаунт? Войти'
-            : 'Нет аккаунта? Зарегистрироваться'}
+            ? 'РЈР¶Рµ РµСЃС‚СЊ Р°РєРєР°СѓРЅС‚? Р’РѕР№С‚Рё'
+            : 'РќРµС‚ Р°РєРєР°СѓРЅС‚Р°? Р—Р°СЂРµРіРёСЃС‚СЂРёСЂРѕРІР°С‚СЊСЃСЏ'}
         </button>
       </div>
     </main>
@@ -114,3 +114,4 @@ function AuthForm() {
 }
 
 export default AuthForm;
+

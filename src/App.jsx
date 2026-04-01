@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+п»їimport { useEffect, useState } from 'react';
 import './App.css';
 import AuthForm from './components/AuthForm';
 import Header from './components/Header';
@@ -32,7 +32,7 @@ function App() {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Ошибка загрузки треков:', error);
+      console.error('РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё С‚СЂРµРєРѕРІ:', error);
       return [];
     }
 
@@ -45,7 +45,7 @@ function App() {
       const { data, error } = await supabase.auth.getSession();
 
       if (error) {
-        console.error('Ошибка загрузки сессии:', error);
+        console.error('РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё СЃРµСЃСЃРёРё:', error);
         setIsSessionLoading(false);
         return;
       }
@@ -144,7 +144,7 @@ function App() {
         .single();
 
       if (error) {
-        console.error('Ошибка обновления трека:', error);
+        console.error('РћС€РёР±РєР° РѕР±РЅРѕРІР»РµРЅРёСЏ С‚СЂРµРєР°:', error);
         return;
       }
 
@@ -173,7 +173,7 @@ function App() {
         .single();
 
       if (error) {
-        console.error('Ошибка добавления трека:', error);
+        console.error('РћС€РёР±РєР° РґРѕР±Р°РІР»РµРЅРёСЏ С‚СЂРµРєР°:', error);
         return;
       }
 
@@ -203,7 +203,7 @@ function App() {
       .eq('user_id', session.user.id);
 
     if (error) {
-      console.error('Ошибка удаления трека:', error);
+      console.error('РћС€РёР±РєР° СѓРґР°Р»РµРЅРёСЏ С‚СЂРµРєР°:', error);
       return;
     }
 
@@ -218,7 +218,7 @@ function App() {
     const { error } = await supabase.auth.signOut();
 
     if (error) {
-      console.error('Ошибка выхода из аккаунта:', error);
+      console.error('РћС€РёР±РєР° РІС‹С…РѕРґР° РёР· Р°РєРєР°СѓРЅС‚Р°:', error);
     }
   }
 
@@ -270,8 +270,8 @@ function App() {
     return (
       <main className="auth-shell">
         <div className="auth-card">
-          <h1 className="app-title">Трек Хранилище</h1>
-          <p className="auth-text">Загрузка...</p>
+          <h1 className="app-title">РўСЂРµРє РҐСЂР°РЅРёР»РёС‰Рµ</h1>
+          <p className="auth-text">Р—Р°РіСЂСѓР·РєР°...</p>
         </div>
       </main>
     );
@@ -288,10 +288,10 @@ function App() {
           <Header trackCount={tracks.length} userEmail={session.user.email} />
           <div className="topbar-actions">
             <button type="button" className="add-track-button" onClick={handleToggleForm}>
-              {isFormOpen ? 'Закрыть форму' : 'Добавить трек'}
+              {isFormOpen ? 'Р—Р°РєСЂС‹С‚СЊ С„РѕСЂРјСѓ' : 'Р”РѕР±Р°РІРёС‚СЊ С‚СЂРµРє'}
             </button>
             <button type="button" className="secondary-button" onClick={handleSignOut}>
-              Выйти
+              Р’С‹Р№С‚Рё
             </button>
           </div>
         </div>
@@ -299,21 +299,21 @@ function App() {
         {isFormOpen ? (
           <form className="track-form" onSubmit={handleSubmit}>
             <div className="section-heading form-heading">
-              <p className="section-label">Редактор трека</p>
+              <p className="section-label">Р РµРґР°РєС‚РѕСЂ С‚СЂРµРєР°</p>
               <h2 className="section-title">
-                {editingTrackId ? 'Редактировать трек' : 'Добавить новый трек'}
+                {editingTrackId ? 'Р РµРґР°РєС‚РёСЂРѕРІР°С‚СЊ С‚СЂРµРє' : 'Р”РѕР±Р°РІРёС‚СЊ РЅРѕРІС‹Р№ С‚СЂРµРє'}
               </h2>
             </div>
 
             <div className="form-field">
-              <label htmlFor="title">Название</label>
+              <label htmlFor="title">РќР°Р·РІР°РЅРёРµ</label>
               <input
                 id="title"
                 name="title"
                 type="text"
                 value={formData.title}
                 onChange={handleChange}
-                placeholder="Введите название трека"
+                placeholder="Р’РІРµРґРёС‚Рµ РЅР°Р·РІР°РЅРёРµ С‚СЂРµРєР°"
                 required
               />
             </div>
@@ -326,40 +326,40 @@ function App() {
                 type="number"
                 value={formData.bpm}
                 onChange={handleChange}
-                placeholder="Введите BPM"
+                placeholder="Р’РІРµРґРёС‚Рµ BPM"
                 required
               />
             </div>
 
             <div className="form-field">
-              <label htmlFor="status">Статус</label>
+              <label htmlFor="status">РЎС‚Р°С‚СѓСЃ</label>
               <select
                 id="status"
                 name="status"
                 value={formData.status}
                 onChange={handleChange}
               >
-                <option value="idea">Идея</option>
-                <option value="draft">Черновик</option>
-                <option value="mix">Микс</option>
-                <option value="released">Релиз</option>
+                <option value="idea">РРґРµСЏ</option>
+                <option value="draft">Р§РµСЂРЅРѕРІРёРє</option>
+                <option value="mix">РњРёРєСЃ</option>
+                <option value="released">Р РµР»РёР·</option>
               </select>
             </div>
 
             <div className="form-field form-field-wide">
-              <label htmlFor="comment">Заметки / Текст</label>
+              <label htmlFor="comment">Р—Р°РјРµС‚РєРё / РўРµРєСЃС‚</label>
               <textarea
                 id="comment"
                 name="comment"
                 value={formData.comment}
                 onChange={handleChange}
-                placeholder="Запиши идеи, текст куплета, референсы или любые рабочие заметки"
+                placeholder="Р—Р°РїРёС€Рё РёРґРµРё, С‚РµРєСЃС‚ РєСѓРїР»РµС‚Р°, СЂРµС„РµСЂРµРЅСЃС‹ РёР»Рё Р»СЋР±С‹Рµ СЂР°Р±РѕС‡РёРµ Р·Р°РјРµС‚РєРё"
                 rows="6"
               />
             </div>
 
             <button type="submit" className="save-track-button">
-              {editingTrackId ? 'Сохранить изменения' : 'Сохранить трек'}
+              {editingTrackId ? 'РЎРѕС…СЂР°РЅРёС‚СЊ РёР·РјРµРЅРµРЅРёСЏ' : 'РЎРѕС…СЂР°РЅРёС‚СЊ С‚СЂРµРє'}
             </button>
           </form>
         ) : null}
@@ -367,27 +367,27 @@ function App() {
         <div className="tools-grid">
           <div className="search-panel">
             <div className="section-heading">
-              <p className="section-label">Поиск</p>
-              <h2 className="section-title">Название и заметки</h2>
+              <p className="section-label">РџРѕРёСЃРє</p>
+              <h2 className="section-title">РќР°Р·РІР°РЅРёРµ Рё Р·Р°РјРµС‚РєРё</h2>
             </div>
 
             <div className="search-input-wrap">
-              <span className="search-icon" aria-hidden="true">Поиск</span>
+              <span className="search-icon" aria-hidden="true">РџРѕРёСЃРє</span>
               <input
                 type="text"
                 value={searchQuery}
                 onChange={function (event) {
                   setSearchQuery(event.target.value);
                 }}
-                placeholder="Ищи по названию трека, тексту песни или заметкам"
+                placeholder="РС‰Рё РїРѕ РЅР°Р·РІР°РЅРёСЋ С‚СЂРµРєР°, С‚РµРєСЃС‚Сѓ РїРµСЃРЅРё РёР»Рё Р·Р°РјРµС‚РєР°Рј"
               />
             </div>
           </div>
 
           <div className="sort-panel">
             <div className="section-heading">
-              <p className="section-label">Сортировка</p>
-              <h2 className="section-title">Порядок списка</h2>
+              <p className="section-label">РЎРѕСЂС‚РёСЂРѕРІРєР°</p>
+              <h2 className="section-title">РџРѕСЂСЏРґРѕРє СЃРїРёСЃРєР°</h2>
             </div>
 
             <div className="form-field">
@@ -397,12 +397,12 @@ function App() {
                   setSortBy(event.target.value);
                 }}
               >
-                <option value="newest">Сначала новые</option>
-                <option value="oldest">Сначала старые</option>
-                <option value="bpm-asc">BPM: по возрастанию</option>
-                <option value="bpm-desc">BPM: по убыванию</option>
-                <option value="title-asc">Название: А-Я</option>
-                <option value="title-desc">Название: Я-А</option>
+                <option value="newest">РЎРЅР°С‡Р°Р»Р° РЅРѕРІС‹Рµ</option>
+                <option value="oldest">РЎРЅР°С‡Р°Р»Р° СЃС‚Р°СЂС‹Рµ</option>
+                <option value="bpm-asc">BPM: РїРѕ РІРѕР·СЂР°СЃС‚Р°РЅРёСЋ</option>
+                <option value="bpm-desc">BPM: РїРѕ СѓР±С‹РІР°РЅРёСЋ</option>
+                <option value="title-asc">РќР°Р·РІР°РЅРёРµ: Рђ-РЇ</option>
+                <option value="title-desc">РќР°Р·РІР°РЅРёРµ: РЇ-Рђ</option>
               </select>
             </div>
           </div>
@@ -410,7 +410,7 @@ function App() {
 
         <div className="tools-actions">
           <button type="button" className="secondary-button" onClick={handleResetTools}>
-            Сбросить фильтры
+            РЎР±СЂРѕСЃРёС‚СЊ С„РёР»СЊС‚СЂС‹
           </button>
         </div>
 
@@ -427,3 +427,4 @@ function App() {
 }
 
 export default App;
+

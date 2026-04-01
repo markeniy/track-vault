@@ -1,17 +1,17 @@
-const statuses = [
-  { value: 'all', label: 'Все' },
-  { value: 'idea', label: 'Идея' },
-  { value: 'draft', label: 'Черновик' },
-  { value: 'mix', label: 'Микс' },
-  { value: 'released', label: 'Релиз' },
+п»їconst statuses = [
+  { value: 'all', label: 'Р’СЃРµ' },
+  { value: 'idea', label: 'РРґРµСЏ' },
+  { value: 'draft', label: 'Р§РµСЂРЅРѕРІРёРє' },
+  { value: 'mix', label: 'РњРёРєСЃ' },
+  { value: 'released', label: 'Р РµР»РёР·' },
 ];
 
 function StatusFilter({ activeFilter, onFilterChange }) {
   return (
     <div className="status-filter-wrap">
       <div className="section-heading">
-        <p className="section-label">Библиотека фильтров</p>
-        <h2 className="section-title">Статус трека</h2>
+        <p className="section-label">Р‘РёР±Р»РёРѕС‚РµРєР° С„РёР»СЊС‚СЂРѕРІ</p>
+        <h2 className="section-title">РЎС‚Р°С‚СѓСЃ С‚СЂРµРєР°</h2>
       </div>
 
       <div className="status-filter">
@@ -37,3 +37,4 @@ function StatusFilter({ activeFilter, onFilterChange }) {
 }
 
 export default StatusFilter;
+
